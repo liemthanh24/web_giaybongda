@@ -1,0 +1,33 @@
+<!-- Trang chính -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Giày Bóng Đá</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Shop Giày Bóng Đá</h1>
+        <nav>
+            <a href="#">Trang chủ</a>
+            <a href="#cart">Giỏ hàng</a>
+        </nav>
+    </header>
+    <main>
+        <section id="products">
+            <!-- Danh sách sản phẩm sẽ được render ở đây -->
+        </section>
+        <section id="cart" style="display:none;">
+            <h2>Giỏ hàng</h2>
+            <ul id="cart-items"></ul>
+            <button onclick="checkout()">Thanh toán</button>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Shop Giày Bóng Đá</p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
