@@ -81,8 +81,8 @@
     </div>
     <script>
     let users = [
-        { username: "admin", password: "123456", type: "admin" },
-        { username: "user", password: "password", type: "user" }
+    { username: "admin", password: "123456", type: "admin" },
+    { username: "user", password: "123456", type: "user" }
     ];
     function login(event) {
         event.preventDefault();
@@ -94,7 +94,11 @@
         if (user) {
             localStorage.setItem('loggedIn', 'true');
             localStorage.setItem('username', username);
-            window.location.href = 'index.html';
+            if (user.type === 'admin') {
+                window.location.href = 'admin.html';
+            } else {
+                window.location.href = 'index.html';
+            }
         } else {
             errorEl.textContent = 'Sai thông tin đăng nhập!';
         }

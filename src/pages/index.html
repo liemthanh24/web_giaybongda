@@ -25,6 +25,12 @@
                 <button id="cart-btn" class="ml-2 p-2 rounded-full hover:bg-gray-100">
                     <img src="https://thafd.bing.com/th/id/OIP.u-1dWGTM7biu51ZxKpOIiAHaFL?w=277&h=194&c=7&r=0&o=7&cb=thfvnext&dpr=1.3&pid=1.7&rm=3" alt="shopping cart" class="h-14 w-14 object-contain" style="background: transparent;">
                 </button>
+                <script>
+                document.getElementById('cart-btn').onclick = function() {
+                    window.location.href = 'cart.html';
+                };
+                </script>
+                </button>
             </span>
         </div>
     </header>
@@ -62,6 +68,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M3 12h18M3 18h18"/></svg>
                     </span>
                     <select id="sort-select" class="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        <option value="all">Tất cả</option>
                         <option value="price">Giá cả</option>
                         <option value="name">Tên giày (A-Z)</option>
                         <option value="date">Ngày sản xuất</option>
@@ -69,12 +76,31 @@
                 </div>
             </div>
             <!-- Danh sách giày -->
-            <div id="products-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
-                <div id="no-products" class="text-center text-gray-500 mt-8 hidden">Không có đôi nào thỏa mãn</div>
+            <div id="products-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Sản phẩm mẫu để đồng bộ thông tin -->
+                <div class="bg-white rounded-xl shadow flex flex-col p-4">
+                    <img src="assets/mizuno-monarcida.jpg" alt="WAVE MEDAL NEO" class="w-full h-40 object-contain mb-4 rounded-xl border">
+                    <h3 class="text-lg font-bold mb-1">WAVE MEDAL NEO</h3>
+                    <div class="mb-1 text-gray-700 text-sm">Mã sản phẩm: 81GA232502.37</div>
+                    <div class="mb-2">
+                        <span class="text-2xl font-bold text-purple-700 mr-2">2,900,000đ</span>
+                        <span class="text-lg text-gray-400 line-through">2,900,000đ</span>
+                    </div>
+                    <div class="flex gap-2 w-full mt-auto">
+                        <button onclick="showBuy(2)" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
+                            <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4 mr-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A1 1 0 007.6 17h8.8a1 1 0 00.95-1.3L17 13M7 13V6a1 1 0 011-1h9a1 1 0 011 1v7'/></svg><span>MUA NGAY</span></button>
+                        <button onclick="showDetail(2)" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
+                            <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4 mr-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'/><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'/></svg><span>CHI TIẾT</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="no-products" class="text-center text-gray-500 mt-8 hidden">Không có đôi nào thỏa mãn</div>
         </section>
     </main>
     <!-- Dialog đăng nhập thành công -->
     <div id="login-dialog" class="fixed bottom-6 right-6 bg-purple-700 text-white px-6 py-3 rounded-lg shadow-lg text-lg font-semibold hidden z-50">Đăng nhập thành công!</div>
+    <script src="../assets/products.js"></script>
     <script src="../assets/script.js"></script>
 </body>
 </html>

@@ -1,112 +1,39 @@
-// Toàn bộ mã JavaScript cho trang chính
-const products = [
-	{
-		id: 1,
-		name: "Kamito QH19",
-		price: 1200000,
-		brand: "Kamito",
-		date: "2024-05-01",
-		image: "assets/kamito-qh19.jpg",
-		desc: "Giày Kamito QH19 hot nhất hiện nay."
-	},
-	{
-		id: 2,
-		name: "Mizuno Monarcida",
-		price: 1800000,
-		brand: "Mizuno",
-		date: "2024-04-15",
-		image: "assets/mizuno-monarcida.jpg",
-		desc: "Giày Mizuno Monarcida chất lượng cao.",
-		outOfStock: true
-	},
-	{
-		id: 3,
-		name: "CP Sports Pro",
-		price: 950000,
-		brand: "CP Sports",
-		date: "2024-03-20",
-		image: "assets/cpsports-pro.jpg",
-		desc: "Giày CP Sports Pro giá tốt."
-	},
-	{
-		id: 4,
-		name: "Just Play Speed",
-		price: 1100000,
-		brand: "Just Play",
-		date: "2024-02-10",
-		image: "assets/justplay-speed.jpg",
-		desc: "Giày Just Play Speed dành cho tốc độ.",
-		outOfStock: true
-	},
-	{
-		id: 5,
-		name: "Akka Control",
-		price: 1050000,
-		brand: "Akka",
-		date: "2024-01-05",
-		image: "assets/akka-control.jpg",
-		desc: "Giày Akka Control kiểm soát bóng tốt."
-	},
-	{
-		id: 6,
-		name: "Mitre Delta",
-		price: 990000,
-		brand: "Mitre",
-		date: "2023-12-20",
-		image: "assets/mitre-delta.jpg",
-		desc: "Giày Mitre Delta bền đẹp.",
-		outOfStock: true
-	},
-	{
-		id: 7,
-		name: "Jogabola Classic",
-		price: 850000,
-		brand: "Jogabola",
-		date: "2023-11-15",
-		image: "assets/jogabola-classic.jpg",
-		desc: "Giày Jogabola Classic phong cách cổ điển."
-	},
-	{
-		id: 8,
-		name: "Pan Vigor",
-		price: 1250000,
-		brand: "Pan",
-		date: "2023-10-01",
-		image: "assets/pan-vigor.jpg",
-		desc: "Giày Pan Vigor dành cho mọi sân bóng."
-	}
-];
 
 const cart = [];
+const users = [
+	{ username: "admin", password: "123456" },
+	{ username: "user", password: "123456" }
+];
 
-function renderProducts() {
+function renderProducts(customList) {
 	const productsEl = document.getElementById('products-list');
-	let filtered = Array.isArray(arguments[0]) ? arguments[0] : products.filter(p => currentBrand === "Tất cả" || p.brand === currentBrand);
-	if (!Array.isArray(arguments[0])) {
+	let filtered = Array.isArray(customList) 
+		? customList 
+		: products.filter(p => currentBrand === "Tất cả" || p.brand === currentBrand);
+
+	if (!Array.isArray(customList)) {
 		if (currentSort === "price") filtered.sort((a, b) => a.price - b.price);
 		else if (currentSort === "name") filtered.sort((a, b) => a.name.localeCompare(b.name));
 		else if (currentSort === "date") filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+		else if (currentSort === "all") filtered = products.slice();
 	}
+
 	productsEl.innerHTML = filtered.map(p => {
-		// demo: nếu có thuộc tính outOfStock thì tạm hết, nếu có discount thì hiển thị giảm giá
-		const outOfStock = p.outOfStock;
-		const discount = p.discount;
-		const oldPrice = discount ? Math.round(p.price / (1 - discount/100)) : null;
 		return `
 		<div class="bg-white rounded-xl shadow p-4 flex flex-col items-stretch border border-gray-200 h-full">
 			<div class="relative w-full flex justify-center">
 				<img src="${p.image}" alt="${p.name}" class="h-40 w-auto object-contain mb-2" />
-				${discount ? `<span class='absolute left-2 top-2 bg-black text-white text-xs px-2 py-1 rounded'>-${discount}%</span>` : ''}
+				${p.discount ? `<span class='absolute left-2 top-2 bg-black text-white text-xs px-2 py-1 rounded'>-${p.discount}%</span>` : ''}
 			</div>
 			<h3 class="font-bold text-lg mb-1 text-center min-h-[48px] flex items-center justify-center">${p.name}</h3>
 			<p class="text-gray-600 mb-1 text-center min-h-[36px] flex items-center justify-center">${p.desc || ''}</p>
 			<div class="flex flex-col items-center mb-2 min-h-[40px] justify-center">
 				<span class="font-bold text-xl text-gray-900">${p.price.toLocaleString()}đ</span>
-				${oldPrice ? `<span class="text-gray-400 line-through text-base">${oldPrice.toLocaleString()}đ</span>` : ''}
+				${p.oldPrice ? `<span class="text-gray-400 line-through text-base">${p.oldPrice.toLocaleString()}đ</span>` : ''}
 			</div>
-			${outOfStock ? `<span class="text-red-600 font-bold text-lg mb-2">TẠM HẾT</span>` : ''}
+			${p.outOfStock ? `<span class="text-red-600 font-bold text-lg mb-2">TẠM HẾT</span>` : ''}
 			<div class="flex gap-2 w-full mt-auto">
-				${!outOfStock ? `<button onclick="addToCart(${p.id})" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
+				${!p.outOfStock ? `<button onclick="window.location.href='buy.html'" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
 					<svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4 mr-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A1 1 0 007.6 17h8.8a1 1 0 00.95-1.3L17 13M7 13V6a1 1 0 011-1h9a1 1 0 011 1v7'/></svg><span>MUA NGAY</span></button>` : ''}
 				<button onclick="showDetail(${p.id})" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
 					<svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4 mr-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'/><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'/></svg><span>CHI TIẾT</span>
@@ -115,6 +42,7 @@ function renderProducts() {
 		</div>
 		`;
 	}).join('');
+
 	const noProducts = document.getElementById('no-products');
 	if (filtered.length === 0) {
 		noProducts && (noProducts.classList.remove('hidden'));
@@ -277,21 +205,13 @@ function checkout() {
 }
 
 // Chuyển đổi giữa trang chủ và giỏ hàng
-const navLinks = document.querySelectorAll('nav a');
-navLinks[0].onclick = function() {
-	document.getElementById('products').style.display = '';
-	document.getElementById('cart').style.display = 'none';
-};
-navLinks[1].onclick = function() {
-	document.getElementById('products').style.display = 'none';
-	document.getElementById('cart').style.display = '';
-	renderCart();
-};
+window.onload = function() {
+	renderProducts();
+	renderHot();
+	// ...existing code...
+}
 
-window.onload = renderProducts;
+function showDetail(id) {
+	window.location.href = 'product-detail.html';
+}
 // Đăng nhập đơn giản
-let currentUser = null;
-const users = [
-	{ username: "admin", password: "123456" },
-	{ username: "user", password: "password" }
-];
