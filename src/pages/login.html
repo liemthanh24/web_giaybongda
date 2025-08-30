@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - Giày Bóng Đá</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../assets/auth-api.js"></script>
+    <script src="../assets/login.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; }
@@ -26,7 +28,7 @@
                 <h1 class="text-3xl sm:text-4xl font-bold text-purple-600">Giày Bóng Đá</h1>
                 <p class="text-gray-500 mt-2">Login to your account</p>
             </div>
-            <form id="login-form" class="space-y-6" onsubmit="return login(event)">
+            <form id="login-form" class="space-y-6">
                 <div>
                     <label for="username" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -80,33 +82,7 @@
         </div>
     </div>
     <script>
-    let users = [
-    { username: "admin", password: "123456", type: "admin" },
-    { username: "user", password: "123456", type: "user" }
-    ];
-    function login(event) {
-        event.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const type = document.getElementById('type').value;
-        const user = users.find(u => u.username === username && u.password === password && u.type === type);
-        const errorEl = document.getElementById('login-error');
-        if (user) {
-            localStorage.setItem('loggedIn', 'true');
-            localStorage.setItem('username', username);
-            if (user.type === 'admin') {
-                window.location.href = 'admin.html';
-            } else {
-                window.location.href = 'index.html';
-            }
-        } else {
-            errorEl.textContent = 'Sai thông tin đăng nhập!';
-        }
-        return false;
-    }
-    function forgotPassword() {
-        alert('Vui lòng liên hệ quản trị viên để lấy lại mật khẩu!');
-    }
+    // Đã tích hợp login.js, không cần JS giả lập ở đây
     </script>
 </body>
 </html>

@@ -1,52 +1,18 @@
-// products.js - dữ liệu dùng chung
+// products.js - Chỉ định nghĩa cấu trúc dữ liệu, không còn dữ liệu mẫu
 const products = [
-	{
-		id: 1,
-		name: "Kamito QH19",
-		price: 1200000,
-		brand: "Kamito",
-		date: "2024-05-01",
-		image: "assets/kamito-qh19.jpg",
-		desc: "Giày Kamito QH19 hot nhất hiện nay."
-	},
-	{
-		id: 2,
-		name: "Mizuno Monarcida",
-		price: 1800000,
-		brand: "Mizuno",
-		date: "2024-04-15",
-		image: "assets/mizuno-monarcida.jpg",
-		desc: "Giày Mizuno Monarcida chất lượng cao.",
-		outOfStock: true
-	},
-	{
-		id: 3,
-		name: "CP Sports Pro",
-		price: 950000,
-		brand: "CP Sports",
-		date: "2024-03-20",
-		image: "assets/cpsports-pro.jpg",
-		desc: "Giày CP Sports Pro giá tốt."
-	},
-	{
-		id: 4,
-		name: "Just Play Speed",
-		price: 1100000,
-		brand: "Just Play",
-		date: "2024-02-10",
-		image: "assets/justplay-speed.jpg",
-		desc: "Giày Just Play Speed dành cho tốc độ.",
-		outOfStock: true
-	},
-	{
-		id: 5,
-		name: "Akka Control",
-		price: 1050000,
-		brand: "Akka",
-		date: "2024-01-05",
-		image: "assets/akka-control.jpg",
-		desc: "Giày Akka Control kiểm soát bóng tốt."
-	},
+    // Format mẫu cho sản phẩm:
+    /*
+    {
+        id: number,         // ID sản phẩm
+        name: string,       // Tên sản phẩm
+        price: number,      // Giá (VND)
+        brand: string,      // Thương hiệu
+        date: string,       // Ngày thêm vào (YYYY-MM-DD)
+        image: string,      // Đường dẫn ảnh
+        desc: string,       // Mô tả
+        outOfStock: boolean // Trạng thái hết hàng (tùy chọn)
+    }
+    */
 	{
 		id: 6,
 		name: "Mitre Delta",

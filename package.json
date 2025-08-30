@@ -4,7 +4,7 @@
   "description": "Web bán giày bóng đá đơn giản",
   "main": "index.html",
   "scripts": {
-    "dev": "live-server src/pages --open=login.html"
+    "dev": "live-server --open=src/pages/login.html"
   },
   "author": "",
   "license": "MIT",
