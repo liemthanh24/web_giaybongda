@@ -1,0 +1,26 @@
+function sortProducts(products, criteria) {
+    return [...products].sort((a, b) => {
+        switch (criteria.toLowerCase()) {
+            case 'price':
+                return a.price - b.price;
+            case 'name':
+                return a.name.localeCompare(b.name);
+            case 'date':
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            default:
+                return 0;
+        }
+    });
+}
+
+// Export các functions
+export {
+    getProducts,
+    getProductsByBrand,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    searchProducts,
+    sortProducts,
+    fetchProductsAndRender
+};
