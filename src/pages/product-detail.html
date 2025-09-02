@@ -4,9 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết sản phẩm</title>
-    <script src="../assets/products.js"></script>
-    <script src="../assets/product-detail.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Hàm định dạng số tiền sang VND
+        function formatCurrency(amount) {
+            return amount.toLocaleString('vi-VN') + 'đ';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Lấy thông tin sản phẩm từ localStorage
+            const productInfo = JSON.parse(localStorage.getItem('productDetail'));
+            if (!productInfo) {
+                alert('Không tìm thấy thông tin sản phẩm!');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Cập nhật thông tin sản phẩm lên giao diện
+            document.getElementById('product-image').src = productInfo.image;
+            document.getElementById('product-name').textContent = productInfo.name;
+            document.getElementById('product-code').textContent = productInfo.code;
+            document.getElementById('product-price').textContent = formatCurrency(productInfo.price);
+            // Removed old price display
+
+            // Xử lý nút thêm vào giỏ
+            const quantityInput = document.querySelector('input[type="number"]');
+            const minusBtn = quantityInput.previousElementSibling;
+            const plusBtn = quantityInput.nextElementSibling;
+            const addToCartBtn = document.querySelector('.mb-6 button:last-child');
+
+            minusBtn.addEventListener('click', () => {
+                if (quantityInput.value > 1) {
+                    quantityInput.value = parseInt(quantityInput.value) - 1;
+                }
+            });
+
+            plusBtn.addEventListener('click', () => {
+                quantityInput.value = parseInt(quantityInput.value) + 1;
+            });
+
+            addToCartBtn.addEventListener('click', () => {
+                const quantity = parseInt(quantityInput.value);
+                // Thêm vào giỏ hàng (có thể lưu vào localStorage hoặc gửi lên server)
+                alert(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
+            });
+
+            // Thêm sự kiện cho nút mua hàng
+            document.querySelector('.mb-6 button').addEventListener('click', () => {
+                const cartItem = {
+                    productId: productInfo.id,
+                    quantity: parseInt(quantityInput.value)
+                };
+                // Thêm vào giỏ hàng và chuyển đến trang giỏ hàng
+                localStorage.setItem('lastAddedItem', JSON.stringify(cartItem));
+                window.location.href = 'cart.html';
+            });
+        });
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; }
@@ -42,7 +96,7 @@
                 <div class="mb-2 text-gray-700">Mã sản phẩm: <span id="product-code"></span></div>
                 <div class="mb-4">
                     <span id="product-price" class="text-2xl font-bold text-purple-700 mr-2"></span>
-                    <span id="product-old-price" class="text-lg text-gray-400 line-through"></span>
+                    <!-- Removed old price element -->
                 </div>
                 <div class="mb-4">
                     <div class="font-semibold mb-1">Màu sắc</div>

@@ -21,7 +21,7 @@
             <input type="text" placeholder="Tìm kiếm người dùng..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
         </div>
         <div class="flex items-center gap-4">
-            <span class="text-gray-700 text-xl font-semibold flex items-center">Chào, <span class="ml-1">admin</span></span>
+            <span class="text-gray-700 text-xl font-semibold">Chào, <span class="ml-1">admin</span></span>
         </div>
     </header>
     <main class="flex gap-8 px-8 py-6">
@@ -36,7 +36,15 @@
         </aside>
         <!-- Nội dung chính -->
         <section class="flex-1">
-            <h2 class="text-3xl font-extrabold mb-6">Quản lý người dùng</h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-extrabold">Quản lý người dùng</h2>
+                <button id="refresh-users" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                    </svg>
+                    Làm mới danh sách
+                </button>
+            </div>
             <!-- Bảng người dùng -->
             <div class="bg-white rounded-xl shadow overflow-hidden">
                 <table class="min-w-full">

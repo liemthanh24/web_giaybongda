@@ -54,7 +54,6 @@ function renderProducts(products) {
             <div class="mb-1 text-gray-700 text-sm">Mã sản phẩm: ${product.id}</div>
             <div class="mb-2">
                 <span class="text-2xl font-bold text-purple-700 mr-2">${formatPrice(product.price)}đ</span>
-                ${product.oldPrice ? `<span class="text-lg text-gray-400 line-through">${formatPrice(product.oldPrice)}đ</span>` : ''}
             </div>
             <div class="flex gap-2 w-full mt-auto">
                 <button onclick="showBuy('${product.id}')" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">

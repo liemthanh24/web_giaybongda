@@ -1,33 +1,23 @@
 // products-api.js
-const API_URL = 'http://localhost:3001/api';
 
-async function getProducts() {
+// Define base functions in global scope
+window.getProducts = async function() {
     try {
-        console.log('Calling API:', `${API_URL}/products`); // Debug log
-        const response = await fetch(`${API_URL}/products`);
-        
-        // Debug logs
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.log('Error response:', errorText); // Debug log
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-        }
+        console.log('Fetching products...');
+        const response = await fetch(window.API_URL + '/products');
         
         const data = await response.json();
-        console.log('Received data:', data); // Debug log
         
-        if (!Array.isArray(data)) {
-            console.log('Data is not an array:', data); // Debug log
-            return []; // Return empty array if data is not in expected format
+        if (!response.ok) {
+            throw new Error(data.error?.sqlMessage || data.error?.message || 'Failed to fetch products');
         }
-        
+
+        console.log('Received products:', data);
         return data;
     } catch (error) {
-        console.error('Lỗi khi lấy danh sách sản phẩm:', error);
-        return []; // Return empty array on error
+        console.error('Error fetching products:', error);
+        // Add more context to the error
+        throw new Error(`Failed to fetch products: ${error.message}`);
     }
 }
 
@@ -84,17 +74,52 @@ function generateProductId(brand) {
 // Cập nhật sản phẩm
 async function updateProduct(id, product) {
     try {
+        // Log the request
+        console.log('Đang cập nhật sản phẩm:', { id, product });
+        
+        // Ensure product has the correct field name (stock instead of quantity)
+        const updatedProduct = {
+            ...product,
+            stock: product.stock ||  0 // Fallback to quantity or 0
+        };
+        
+        // Log the actual data being sent
+        console.log('Sending to API:', {
+            url: `${API_URL}/products/${id}`,
+            data: updatedProduct
+        });
+        
         const response = await fetch(`${API_URL}/products/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(product)
+            body: JSON.stringify(updatedProduct)
         });
+        
+        console.log('Trạng thái response:', {
+            status: response.status,
+            ok: response.ok,
+            statusText: response.statusText
+        });
+        
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            let errorMessage;
+            try {
+                const errorData = await response.json();
+                console.error('Lỗi từ API:', errorData);
+                errorMessage = errorData.error?.sqlMessage || errorData.error || JSON.stringify(errorData);
+            } catch (e) {
+                const errorText = await response.text();
+                console.error('Lỗi từ API (text):', errorText);
+                errorMessage = errorText;
+            }
+            throw new Error(`Lỗi khi cập nhật sản phẩm: ${errorMessage}`);
         }
-        return await response.json();
+        
+        const data = await response.json();
+        console.log('Dữ liệu sau khi cập nhật:', data);
+        return data;
     } catch (error) {
         console.error('Lỗi khi cập nhật sản phẩm:', error);
         throw error;
@@ -148,13 +173,11 @@ function sortProducts(products, criteria) {
     });
 }
 
-// Export các functions
-export {
-    getProducts,
-    getProductsByBrand,
-    addProduct,
-    updateProduct,
-    deleteProduct,
-    searchProducts,
-    sortProducts
-};
+// Make functions available globally
+window.getProducts = getProducts;
+window.getProductsByBrand = getProductsByBrand;
+window.addProduct = addProduct;
+window.updateProduct = updateProduct;
+window.deleteProduct = deleteProduct;
+window.searchProducts = searchProducts;
+window.sortProducts = sortProducts;

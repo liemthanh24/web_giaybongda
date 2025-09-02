@@ -11,6 +11,22 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; }
+        .brand-btn {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .brand-btn:hover {
+            background-color: rgb(147, 51, 234);
+            color: white;
+        }
+        .brand-btn.active {
+            background-color: rgb(147, 51, 234);
+            color: white;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -56,13 +72,111 @@
         <!-- Nội dung chính -->
         <section class="flex-1">
             <!-- Slider giày hot -->
-            <div class="mb-8">
-                <div class="rounded-xl overflow-hidden shadow relative">
-                    <img id="hot-img" src="assets/nike-mercurial.jpg" alt="Hot" class="w-full h-64 object-cover">
-                    <button id="prev-hot" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white rounded-full p-2 shadow">&#8592;</button>
-                    <button id="next-hot" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white rounded-full p-2 shadow">&#8594;</button>
+            <div class="mb-12">
+                <div class="rounded-xl overflow-hidden shadow-lg relative max-w-[1400px] mx-auto">
+                    <div class="relative">
+                        <div class="slider-container">
+                            <img class="banner-slide absolute top-0 left-0 w-full h-[600px] object-contain object-center transition-opacity duration-700 opacity-0"
+                                 src="https://theme.hstatic.net/200000247969/1001331551/14/slider_3.jpg?v=202" 
+                                 alt="Banner Giày Bóng Đá 1">
+                            <img class="banner-slide absolute top-0 left-0 w-full h-[600px] object-contain object-center transition-opacity duration-700 opacity-0"
+                                 src="https://file.hstatic.net/1000341630/collection/banner_nganh_hang_83a8412d59ab40649525946dc3f07cd0.jpg" 
+                                 alt="Banner Giày Bóng Đá 2">
+                            <img class="banner-slide absolute top-0 left-0 w-full h-[600px] object-contain object-center transition-opacity duration-700 opacity-0"
+                                 src="https://justplay.vn/wp-content/uploads/2025/07/banner-phantor-TL-1.2-trang-AI-1536x768.jpg" 
+                                 alt="Banner Giày Bóng Đá 3">
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent pointer-events-none"></div>
+                    </div>
+                    <button id="prev-hot" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-3 shadow-lg hover:bg-white transition-all duration-300 text-xl z-10">&#8592;</button>
+                    <button id="next-hot" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-3 shadow-lg hover:bg-white transition-all duration-300 text-xl z-10">&#8594;</button>
+                    <!-- Dots navigation -->
+                    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+                        <button class="w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all duration-300 dot-nav active"></button>
+                        <button class="w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all duration-300 dot-nav"></button>
+                        <button class="w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all duration-300 dot-nav"></button>
+                    </div>
                 </div>
             </div>
+
+            <style>
+                .slider-container {
+                    position: relative;
+                    height: 600px;
+                    background-color: #f8f8f8;
+                }
+                .banner-slide {
+                    opacity: 0;
+                    transition: opacity 0.7s ease-in-out;
+                    background-color: #f8f8f8;
+                }
+                .banner-slide.active {
+                    opacity: 1;
+                }
+                .dot-nav.active {
+                    background-color: white;
+                    transform: scale(1.2);
+                }
+            </style>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const slides = document.querySelectorAll('.banner-slide');
+                    const dots = document.querySelectorAll('.dot-nav');
+                    const prevBtn = document.getElementById('prev-hot');
+                    const nextBtn = document.getElementById('next-hot');
+                    let currentSlide = 0;
+                    let slideInterval;
+
+                    function showSlide(index) {
+                        slides.forEach(slide => slide.classList.remove('active'));
+                        dots.forEach(dot => dot.classList.remove('active'));
+                        
+                        slides[index].classList.add('active');
+                        dots[index].classList.add('active');
+                    }
+
+                    function nextSlide() {
+                        currentSlide = (currentSlide + 1) % slides.length;
+                        showSlide(currentSlide);
+                    }
+
+                    function prevSlide() {
+                        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                        showSlide(currentSlide);
+                    }
+
+                    function startSlideShow() {
+                        if (slideInterval) {
+                            clearInterval(slideInterval);
+                        }
+                        slideInterval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
+                    }
+
+                    // Initialize the first slide
+                    showSlide(0);
+                    startSlideShow();
+
+                    // Event listeners
+                    prevBtn.addEventListener('click', () => {
+                        prevSlide();
+                        startSlideShow(); // Reset interval after manual navigation
+                    });
+
+                    nextBtn.addEventListener('click', () => {
+                        nextSlide();
+                        startSlideShow(); // Reset interval after manual navigation
+                    });
+
+                    dots.forEach((dot, index) => {
+                        dot.addEventListener('click', () => {
+                            currentSlide = index;
+                            showSlide(currentSlide);
+                            startSlideShow(); // Reset interval after manual navigation
+                        });
+                    });
+                });
+            </script>
             <!-- Sắp xếp -->
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-3xl font-extrabold" style="font-family: 'Poppins', sans-serif;">Tất cả giày</h2>
@@ -72,9 +186,9 @@
                     </span>
                     <select id="sort-select" class="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
                         <option value="all">Tất cả</option>
-                        <option value="price">Giá cả</option>
+                        <option value="price-asc">Giá: Thấp đến cao</option>
+                        <option value="price-desc">Giá: Cao đến thấp</option>
                         <option value="name">Tên giày (A-Z)</option>
-                        <option value="date">Ngày sản xuất</option>
                     </select>
                 </div>
             </div>
@@ -105,5 +219,160 @@
     <div id="login-dialog" class="fixed bottom-6 right-6 bg-purple-700 text-white px-6 py-3 rounded-lg shadow-lg text-lg font-semibold hidden z-50">Đăng nhập thành công!</div>
     <script src="../assets/index-products.js"></script>
     <script src="../assets/script.js"></script>
+    <script>
+    async function loadProducts() {
+        try {
+            console.log('Fetching products...');
+            const response = await fetch('http://localhost:3001/api/products');
+            console.log('Response status:', response.status);
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch products: ${response.statusText}`);
+            }
+
+            let products = await response.json();
+            console.log('Fetched products:', products);
+
+            // Sắp xếp sản phẩm theo lựa chọn
+            const sortType = document.getElementById('sort-select').value;
+            products = sortProducts(products, sortType);
+
+            const productsList = document.getElementById('products-list');
+            productsList.innerHTML = '';
+
+            if (products.length === 0) {
+                document.getElementById('no-products').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('no-products').classList.add('hidden');
+
+            products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'bg-white rounded-xl shadow flex flex-col p-4';
+                productElement.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}" class="w-full h-40 object-contain mb-4 rounded-xl border">
+                    <h3 class="text-lg font-bold mb-1">${product.name}</h3>
+                    <div class="mb-1 text-gray-700 text-sm">Mã sản phẩm: ${product.code}</div>
+                    <div class="mb-2">
+                        <span class="text-2xl font-bold text-purple-700 mr-2">${product.price.toLocaleString('vi-VN')}đ</span>
+                        <!-- Removed old price display -->
+                    </div>
+                    <div class="flex gap-2 w-full mt-auto">
+                        <button onclick="showBuy('${product.id}', '${product.name}', '${product.code}', ${product.price}, '${product.image}', '${product.brand}')" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
+                            <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4 mr-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A1 1 0 007.6 17h8.8a1 1 0 00.95-1.3L17 13M7 13V6a1 1 0 011-1h9a1 1 0 011 1v7'/></svg><span>MUA NGAY</span></button>
+                        <button onclick="showDetail('${product.id}', '${product.name}', '${product.code}', ${product.price}, '${product.image}', '${product.brand}')" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
+                            <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4 mr-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'/><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'/></svg><span>CHI TIẾT</span>
+                        </button>
+                    </div>
+                `;
+                productsList.appendChild(productElement);
+            });
+        } catch (error) {
+            console.error('Error loading products:', error);
+            alert('Có lỗi xảy ra khi tải sản phẩm. Vui lòng thử lại sau.');
+        }
+    }
+
+    // Biến lưu trữ nhãn hàng đang được chọn
+    let selectedBrand = 'Tất cả';
+
+    // Hàm sắp xếp và lọc sản phẩm
+    function sortProducts(products, sortType) {
+        // Lọc theo nhãn hàng trước
+        let filteredProducts = products;
+        if (selectedBrand !== 'Tất cả') {
+            filteredProducts = products.filter(product => product.brand === selectedBrand);
+        }
+
+        // Sau đó sắp xếp
+        switch (sortType) {
+            case 'price-asc':
+                return filteredProducts.sort((a, b) => a.price - b.price);
+            case 'price-desc':
+                return filteredProducts.sort((a, b) => b.price - a.price);
+            case 'name':
+                return filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+            default:
+                return filteredProducts;
+        }
+    }
+
+    // Xử lý sự kiện khi thay đổi cách sắp xếp
+    document.getElementById('sort-select').addEventListener('change', loadProducts);
+
+    // Xử lý sự kiện cho các nút nhãn hàng
+    document.querySelectorAll('.brand-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Bỏ trạng thái active của tất cả các nút
+            document.querySelectorAll('.brand-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.remove('bg-purple-600', 'text-white');
+            });
+            
+            // Thêm trạng thái active cho nút được chọn
+            this.classList.add('active');
+            this.classList.add('bg-purple-600', 'text-white');
+            
+            // Cập nhật nhãn hàng đang chọn
+            selectedBrand = this.textContent;
+            
+            // Tải lại sản phẩm với bộ lọc mới
+            loadProducts();
+        });
+    });
+
+    // Kiểm tra kết nối với server
+    async function checkServerConnection() {
+        try {
+            const response = await fetch('http://localhost:3001/api/products');
+            if (response.ok) {
+                console.log('Kết nối server thành công');
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Lỗi kết nối server:', error);
+            return false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const isConnected = await checkServerConnection();
+        if (isConnected) {
+            loadProducts();
+        } else {
+            alert('Không thể kết nối đến server. Vui lòng kiểm tra lại kết nối!');
+        }
+    });
+
+    function showBuy(id, name, code, price, image, brand) {
+        // Lưu thông tin sản phẩm vào localStorage
+        const productInfo = {
+            id: id,
+            name: name,
+            code: code,
+            price: price,
+            image: image,
+            brand: brand
+        };
+        localStorage.setItem('selectedProduct', JSON.stringify(productInfo));
+        window.location.href = 'buy.html';
+    }
+
+    function showDetail(id, name, code, price, image, brand) {
+        // Lưu thông tin sản phẩm vào localStorage cho trang chi tiết
+        const productInfo = {
+            id: id,
+            name: name,
+            code: code,
+            price: price,
+            image: image,
+            brand: brand
+        };
+        localStorage.setItem('productDetail', JSON.stringify(productInfo));
+        window.location.href = 'product-detail.html';
+    }
+</script>
 </body>
 </html>

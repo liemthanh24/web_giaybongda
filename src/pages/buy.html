@@ -4,10 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mua sản phẩm</title>
-    <script src="../assets/products.js"></script>
-    <script src="../assets/buy.js"></script>
-
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../assets/buy.js"></script>
+    <script>
+        // Hàm định dạng số tiền sang VND
+        function formatCurrency(amount) {
+            return amount.toLocaleString('vi-VN') + 'đ';
+        }
+
+        // Khi trang tải xong
+        document.addEventListener('DOMContentLoaded', () => {
+            // Lấy thông tin sản phẩm từ localStorage
+            const productInfo = JSON.parse(localStorage.getItem('selectedProduct'));
+            if (!productInfo) {
+                alert('Không tìm thấy thông tin sản phẩm!');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Cập nhật thông tin sản phẩm lên giao diện
+            document.getElementById('product-image').src = productInfo.image;
+            document.getElementById('product-name').textContent = productInfo.name;
+            document.getElementById('product-code').textContent = productInfo.code;
+            document.getElementById('product-price').textContent = formatCurrency(productInfo.price);
+            // Removed old price display
+
+            // Xử lý nút đặt hàng
+            const orderBtn = document.getElementById('order-btn');
+            const orderDialog = document.getElementById('order-dialog');
+            const confirmBtn = document.getElementById('confirm-order');
+            const cancelBtn = document.getElementById('cancel-order');
+
+            orderBtn.addEventListener('click', () => {
+                orderDialog.classList.remove('hidden');
+            });
+
+            confirmBtn.addEventListener('click', () => {
+                alert('Đặt hàng thành công!');
+                orderDialog.classList.add('hidden');
+                window.location.href = 'index.html';
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                orderDialog.classList.add('hidden');
+            });
+        });
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; }
@@ -42,7 +84,7 @@
             <div class="mb-2 text-gray-700">Mã sản phẩm: <span id="product-code"></span></div>
             <div class="mb-4">
                 <span id="product-price" class="text-2xl font-bold text-purple-700 mr-2"></span>
-                <span id="product-old-price" class="text-lg text-gray-400 line-through"></span>
+                <!-- Removed old price element -->
             </div>
             <div class="mb-4">
                 <div class="font-semibold mb-1">Màu sắc</div>

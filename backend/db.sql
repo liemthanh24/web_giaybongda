@@ -23,7 +23,8 @@ CREATE TABLE products (
     colors VARCHAR(255), -- JSON or comma separated
     sizes VARCHAR(255),  -- JSON or comma separated
     stock INT DEFAULT 0,
-    description TEXT
+    description TEXT,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE orders (

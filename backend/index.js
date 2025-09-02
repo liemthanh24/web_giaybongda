@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const path = require('path');
 
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -18,27 +19,18 @@ app.use('/src', express.static(path.join(__dirname, '../src')));
 // Serve static assets
 app.use('/assets', express.static(path.join(__dirname, '../assets')));
 
-// API: Lấy danh sách người dùng
-app.get('/api/users', (req, res) => {
-    console.log('Đang lấy danh sách người dùng...');
-    db.query('SELECT id, username, email, role, created_at FROM users', (err, results) => {
-        if (err) {
-            console.error('Lỗi khi query users:', err);
-            return res.status(500).json({ error: err });
-        }
-        console.log('Danh sách người dùng:', results);
-        res.json(results);
-    });
-});
-
-const db = mysql.createConnection({
+// Database configuration
+const dbConfig = {
     host: 'localhost',
-    user: 'root', // đổi thành user MySQL của bạn
-    password: 'Liemdz2005', // đổi thành password MySQL của bạn
+    user: 'root',
+    password: 'Liemdz2005',
     database: 'giaybongda'
-});
+};
 
-// Kết nối database
+// Database connection
+const db = mysql.createConnection(dbConfig);
+
+// Connect and handle reconnection
 function connectDB() {
     db.connect((err) => {
         if (err) {
@@ -60,7 +52,84 @@ db.on('error', function(err) {
     }
 });
 
+// Initialize database connection
 connectDB();
+
+// API: Cập nhật sản phẩm
+app.put('/api/products/:id', (req, res) => {
+    const { id } = req.params;
+    const { name, brand, price, image, description, stock } = req.body;
+
+    // Log request data
+    console.log('Update request:', {
+        id,
+        body: req.body
+    });
+
+    // Convert values to proper types
+    const numericStock = parseInt(stock || 0);
+    const numericPrice = parseInt(price || 0);
+
+    const query = `
+        UPDATE products 
+        SET name = ?, 
+            brand = ?, 
+            price = ?, 
+            image = ?, 
+            description = ?, 
+            stock = ? 
+        WHERE id = ?
+    `;
+
+    db.query(
+        query,
+        [name, brand, numericPrice, image, description, numericStock, id],
+        (err, result) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ 
+                    error: 'Database error', 
+                    details: err.message 
+                });
+            }
+
+            // Check if any row was updated
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    error: 'Product not found',
+                    details: `No product found with id ${id}`
+                });
+            }
+
+            // Return updated product
+            db.query('SELECT * FROM products WHERE id = ?', [id], (err, products) => {
+                if (err) {
+                    console.error('Error fetching updated product:', err);
+                    return res.status(500).json({ 
+                        error: 'Database error',
+                        details: err.message
+                    });
+                }
+                res.json(products[0]);
+            });
+        }
+    );
+});
+
+// API: Lấy danh sách người dùng
+app.get('/api/users', (req, res) => {
+    console.log('Đang lấy danh sách người dùng...');
+    db.query('SELECT id, username, email, role, created_at FROM users', (err, results) => {
+        if (err) {
+            console.error('Lỗi khi query users:', err);
+            return res.status(500).json({ error: err });
+        }
+        console.log('Danh sách người dùng:', results);
+        res.json(results);
+    });
+});
+
+// API endpoints continue...
 
 // Helper function để tạo ID sản phẩm
 function generateProductCode(brand) {
@@ -106,20 +175,35 @@ function generateProductCode(brand) {
 app.get('/api/products', (req, res) => {
     const query = `
         SELECT 
-            id, 
-            name, 
+            id,
+            name,
             code,
             price,
-            old_price as oldPrice,
             image,
             brand,
+            colors,
+            sizes,
             stock,
-            description
+            description,
+            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as created_at
         FROM products
     `;
     
+    console.log('Executing query:', query);
+    
     db.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: err });
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ 
+                error: {
+                    message: 'Database query failed',
+                    details: err.message
+                }
+            });
+        }
+        
+        console.log('Query results:', results);
+        console.log('Number of products:', results ? results.length : 0);
         res.json(results);
     });
 });
@@ -127,7 +211,9 @@ app.get('/api/products', (req, res) => {
 // API: Thêm sản phẩm mới
 app.post('/api/products', async (req, res) => {
     try {
-        const { name, brand, price, old_price, image, description, stock } = req.body;
+        console.log('Received product data:', req.body); // Debug log
+        
+        const { name, brand, price, image, description, stock } = req.body;
         
         // Validate input
         const errors = [];
@@ -159,16 +245,22 @@ app.post('/api/products', async (req, res) => {
             code: code,
             brand: brand.trim(),
             price: parseInt(price),
-            old_price: old_price ? parseInt(old_price) : null,
+
             image: image.trim(),
             description: description.trim(),
-            stock: parseInt(stock)
+            stock: parseInt(stock),
+            created_at: new Date() // Thêm created_at
         };
+
+        // Log product data before insertion
+        console.log('Product data to insert:', productData);
 
         // Insert new product
         db.query('INSERT INTO products SET ?', productData, (err, result) => {
             if (err) {
                 console.error('Lỗi khi thêm sản phẩm:', err);
+                console.error('SQL Error:', err.sqlMessage); // Log SQL error message
+                
                 // Kiểm tra lỗi trùng mã sản phẩm
                 if (err.code === 'ER_DUP_ENTRY') {
                     return res.status(400).json({ 
@@ -184,8 +276,8 @@ app.post('/api/products', async (req, res) => {
             
             // Get inserted product
             db.query(
-                `SELECT id, name, code, price, old_price as oldPrice, 
-                        image, brand, stock as quantity, description
+                `SELECT id, name, code, price, 
+                        image, brand, stock, description, createdAt
                  FROM products WHERE id = ?`, 
                 [result.insertId], 
                 (err, products) => {
@@ -212,12 +304,43 @@ app.post('/api/products', async (req, res) => {
 });
 
 // API: Cập nhật sản phẩm
-app.put('/api/products/:id', (req, res) => {
+app.put('/api/products/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, brand, price, oldPrice, image, description, quantity } = req.body;
+    
+    // Log toàn bộ request body để debug
+    console.log('Update request body:', req.body);
+    
+    const { name, brand, price, image, description, stock } = req.body;
+    
+    // Log extracted values
+    console.log('Extracted values:', {
+        name, brand, price, image, description, stock,
+        stockType: typeof stock
+    });
 
-    const query = 'UPDATE products SET name = ?, brand = ?, price = ?, oldPrice = ?, image = ?, description = ?, quantity = ? WHERE id = ?';
-    db.query(query, [name, brand, price, oldPrice, image, description, quantity, id], (err) => {
+    // Convert values to correct types
+    const updateData = {
+        name: String(name || ''),
+        brand: String(brand || ''),
+        price: Number(price || 0),
+        stock: Number(stock || 0),
+        image: String(image || ''),
+        description: String(description || '')
+    };
+
+    // Log final update data
+    console.log('Final update data:', updateData);
+
+    const query = 'UPDATE products SET name = ?, brand = ?, price = ?, image = ?, description = ?, stock = ? WHERE id = ?';
+    db.query(query, [
+        updateData.name,
+        updateData.brand,
+        updateData.price,
+        updateData.image,
+        updateData.description,
+        updateData.stock,
+        id
+    ], (err) => {
         if (err) return res.status(500).json({ error: err });
         
         // Trả về sản phẩm sau khi cập nhật
@@ -228,12 +351,54 @@ app.put('/api/products/:id', (req, res) => {
     });
 });
 
-// API: Xóa sản phẩm
+// API: Xóa sản phẩm và cập nhật lại ID
 app.delete('/api/products/:id', (req, res) => {
     const { id } = req.params;
-    db.query('DELETE FROM products WHERE id = ?', [id], (err) => {
-        if (err) return res.status(500).json({ error: err });
-        res.json({ success: true, id });
+    
+    // Bắt đầu transaction để đảm bảo tính nhất quán của dữ liệu
+    db.beginTransaction(async (err) => {
+        if (err) {
+            return res.status(500).json({ error: err });
+        }
+
+        try {
+            // 1. Xóa sản phẩm
+            await new Promise((resolve, reject) => {
+                db.query('DELETE FROM products WHERE id = ?', [id], (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
+
+            // 2. Cập nhật lại ID của các sản phẩm còn lại
+            await new Promise((resolve, reject) => {
+                db.query(
+                    `SET @count = 0; 
+                     UPDATE products 
+                     SET id = @count := @count + 1 
+                     ORDER BY created_at;
+                     ALTER TABLE products AUTO_INCREMENT = 1;`,
+                    (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    }
+                );
+            });
+
+            // Commit transaction nếu mọi thứ OK
+            db.commit((err) => {
+                if (err) {
+                    return db.rollback(() => {
+                        res.status(500).json({ error: err });
+                    });
+                }
+                res.json({ success: true, id });
+            });
+        } catch (error) {
+            return db.rollback(() => {
+                res.status(500).json({ error });
+            });
+        }
     });
 });
 
@@ -345,6 +510,164 @@ app.get('/api/orders/:user_id', (req, res) => {
     db.query('SELECT o.id, o.status, o.created_at, oi.*, p.name, p.image FROM orders o JOIN order_items oi ON o.id = oi.order_id JOIN products p ON oi.product_id = p.id WHERE o.user_id = ?', [user_id], (err, results) => {
         if (err) return res.status(500).json({ error: err });
         res.json(results);
+    });
+});
+
+// API: Lấy doanh thu theo sản phẩm
+app.get('/api/statistics/products', (req, res) => {
+    const query = `
+        SELECT 
+            p.id,
+            p.name,
+            p.code,
+            p.brand,
+            p.price,
+            p.stock,
+            COUNT(DISTINCT o.id) as total_orders,
+            COALESCE(SUM(oi.quantity), 0) as total_quantity,
+            COALESCE(SUM(oi.quantity * oi.price), 0) as total_revenue,
+            p.created_at
+        FROM products p
+        LEFT JOIN order_items oi ON p.id = oi.product_id
+        LEFT JOIN orders o ON oi.order_id = o.id AND o.status != 'Đã hủy'
+        GROUP BY p.id, p.name, p.code, p.brand, p.price, p.stock, p.created_at
+        ORDER BY total_revenue DESC, p.created_at DESC
+    `;
+    
+    console.log('Executing product revenue query...');
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error in product revenue query:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log(`Found ${results.length} products with revenue data`);
+        res.json(results);
+    });
+});
+
+// API: Lấy doanh thu theo nhãn hàng
+app.get('/api/statistics/brands', (req, res) => {
+    const query = `
+        SELECT 
+            p.brand,
+            COUNT(DISTINCT p.id) as total_products,
+            COUNT(DISTINCT o.id) as total_orders,
+            COALESCE(SUM(oi.quantity), 0) as total_quantity,
+            COALESCE(SUM(oi.quantity * oi.price), 0) as total_revenue,
+            SUM(p.stock) as total_stock,
+            MIN(p.created_at) as first_product_date
+        FROM products p
+        LEFT JOIN order_items oi ON p.id = oi.product_id
+        LEFT JOIN orders o ON oi.order_id = o.id AND o.status != 'Đã hủy'
+        WHERE p.brand IS NOT NULL
+        GROUP BY p.brand
+        ORDER BY total_revenue DESC, total_products DESC
+    `;
+    
+    console.log('Executing brand revenue query...');
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error in brand revenue query:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log(`Found ${results.length} brands with revenue data`);
+        res.json(results);
+    });
+});
+
+// API: Lấy thống kê doanh thu theo thời gian
+app.get('/api/statistics/timeline', (req, res) => {
+    const { start_date, end_date, group_by } = req.query;
+    let timeFormat;
+    let groupBy;
+    
+    switch(group_by) {
+        case 'day':
+            timeFormat = '%Y-%m-%d';
+            groupBy = 'DATE(o.created_at)';
+            break;
+        case 'month':
+            timeFormat = '%Y-%m';
+            groupBy = 'DATE_FORMAT(o.created_at, "%Y-%m")';
+            break;
+        case 'year':
+            timeFormat = '%Y';
+            groupBy = 'YEAR(o.created_at)';
+            break;
+        default:
+            timeFormat = '%Y-%m-%d';
+            groupBy = 'DATE(o.created_at)';
+    }
+
+    const query = `
+        SELECT 
+            ${groupBy} as time_period,
+            COUNT(DISTINCT o.id) as total_orders,
+            COUNT(DISTINCT o.user_id) as total_customers,
+            COALESCE(SUM(oi.quantity), 0) as total_items,
+            COALESCE(SUM(oi.quantity * oi.price), 0) as total_revenue
+        FROM orders o
+        LEFT JOIN order_items oi ON o.id = oi.order_id
+        WHERE o.status != 'Đã hủy'
+        ${start_date ? `AND o.created_at >= ?` : ''}
+        ${end_date ? `AND o.created_at <= ?` : ''}
+        GROUP BY time_period
+        ORDER BY time_period DESC
+    `;
+
+    const params = [
+        ...(start_date ? [start_date] : []),
+        ...(end_date ? [end_date] : [])
+    ];
+
+    console.log('Executing timeline revenue query...', {query, params});
+    db.query(query, params, (err, results) => {
+        if (err) {
+            console.error('Error in timeline revenue query:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log(`Found ${results.length} time periods with revenue data`);
+        res.json(results);
+    });
+});
+
+// API: Lấy tổng quan thống kê
+app.get('/api/statistics/overview', (req, res) => {
+    const query = `
+        SELECT 
+            (SELECT COUNT(*) FROM products) as total_products,
+            (SELECT COUNT(DISTINCT brand) FROM products WHERE brand IS NOT NULL) as total_brands,
+            (SELECT COUNT(*) FROM users WHERE role = 'user') as total_customers,
+            (SELECT COUNT(*) FROM orders WHERE status != 'Đã hủy') as total_orders,
+            COALESCE((
+                SELECT SUM(oi.quantity * oi.price) 
+                FROM order_items oi 
+                JOIN orders o ON oi.order_id = o.id 
+                WHERE o.status != 'Đã hủy'
+            ), 0) as total_revenue,
+            (SELECT SUM(stock) FROM products) as total_stock,
+            (
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'status', status,
+                        'count', cnt
+                    )
+                )
+                FROM (
+                    SELECT status, COUNT(*) as cnt
+                    FROM orders
+                    GROUP BY status
+                ) as status_counts
+            ) as order_status_counts
+    `;
+
+    console.log('Executing statistics overview query...');
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error in statistics overview query:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(results[0]);
     });
 });
 
