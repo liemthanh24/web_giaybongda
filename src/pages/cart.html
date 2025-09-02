@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/src/assets/products-api.js"></script>
+    <script src="/src/assets/cart-api.js"></script>
+    <script src="/src/assets/cart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header giống index.html -->
+    <header class="bg-white shadow flex items-center justify-between px-8 py-4">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+            <img src="../../assets/soccer-shoes-logo.svg" alt="logo" class="h-8 w-8">
+            <span class="text-2xl font-bold text-purple-600">Giày Bóng Đá</span>
+        </div>
+        <div class="flex-1 mx-8 relative">
+            <input type="text" placeholder="Tìm kiếm giày..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-gray-700 text-xl font-semibold flex items-center">Chào, <span class="ml-1">user</span>
+                <button class="ml-2 p-2 rounded-full hover:bg-gray-100" onclick="window.location.href='cart.html'">
+                    <img src="https://thafd.bing.com/th/id/OIP.u-1dWGTM7biu51ZxKpOIiAHaFL?w=277&h=194&c=7&r=0&o=7&cb=thfvnext&dpr=1.3&pid=1.7&rm=3" alt="shopping cart" class="h-14 w-14 object-contain" style="background: transparent;">
+                </button>
+                <button id="logout-btn" class="ml-2 p-2 rounded-full hover:bg-gray-100 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
+                <script>
+                document.getElementById('logout-btn').onclick = function() {
+                    localStorage.removeItem('username');
+                    window.location.href = 'login.html';
+                };
+                </script>
+            </span>
+        </div>
+    </header>
+    <main class="px-8 py-6">
+        <h1 class="text-3xl font-bold mb-6">GIỎ HÀNG</h1>
+        <div class="bg-white rounded-xl shadow p-6">
+                <table class="w-full text-left border-t border-gray-200 mt-8">
+                <thead>
+                        <tr class="bg-gray-100">
+                        <th class="py-2">Thông tin chi tiết sản phẩm</th>
+                        <th class="py-2">Đơn giá</th>
+                        <th class="py-2">Số lượng</th>
+                        <th class="py-2">Tổng giá</th>
+                            <th class="py-2">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-list">
+                    <!-- Sản phẩm sẽ được render ở đây -->
+                </tbody>
+            </table>
+                <script src="../assets/cart.js"></script>
+        </div>
+    </main>
+</body>
+</html>
