@@ -90,8 +90,9 @@ app.put('/api/products/:id', (req, res) => {
     `;
 
     // Ensure colors and sizes are valid JSON arrays
-    const colorsArray = Array.isArray(colors) ? colors : [];
-    const sizesArray = Array.isArray(sizes) ? sizes : [];
+const colorsArray = Array.isArray(colors) ? colors : (colors ? colors.split(',') : []);
+const sizesArray  = Array.isArray(sizes)  ? sizes  : (sizes ? sizes.split(',') : []);
+
 
     db.query(
         query,
@@ -271,23 +272,39 @@ app.get('/api/products', (req, res) => {
         const parsedResults = results.map(product => {
     let colors = [];
     let sizes = [];
-    try {
-        colors = product.colors ? JSON.parse(product.colors) : [];
-    } catch (e) {
-        console.error("Parse error colors:", e, product.colors);
+
+    // Xử lý colors
+    if (product.colors) {
+        if (product.colors.startsWith('[')) {
+            // JSON chuẩn
+            try { colors = JSON.parse(product.colors); } 
+            catch (e) { console.error('Parse error colors:', e, product.colors); }
+        } else {
+            // Dữ liệu cũ kiểu "Trắng,Đen"
+            colors = product.colors.split(',');
+        }
     }
-    try {
-        sizes = product.sizes ? JSON.parse(product.sizes) : [];
-    } catch (e) {
-        console.error("Parse error sizes:", e, product.sizes);
+
+    // Xử lý sizes
+    if (product.sizes) {
+        if (product.sizes.startsWith('[')) {
+            try { sizes = JSON.parse(product.sizes); } 
+            catch (e) { console.error('Parse error sizes:', e, product.sizes); }
+        } else {
+            sizes = product.sizes.split(',');
+        }
     }
+
     return {
         ...product,
         colors: Array.isArray(colors) ? colors : [],
         sizes: Array.isArray(sizes) ? sizes : []
     };
-    res.json(parsedResults);
 });
+res.json(parsedResults);
+ });
+});
+
 
 
 // API: Lấy danh sách sản phẩm
@@ -318,11 +335,24 @@ app.get('/api/products/:id/stock', (req, res) => {
         // --- BƯỚC PARSE DỮ LIỆU AN TOÀN ---
         try {
             // Xử lý `colors`
-            if (product.colors && typeof product.colors === 'string') {
-                colors = JSON.parse(product.colors);
-            } else if (Array.isArray(product.colors)) {
-                colors = product.colors; // Nếu nó đã là một mảng
-            }
+            if (product.colors) {
+    if (product.colors.startsWith('[')) {
+        try { colors = JSON.parse(product.colors); } 
+        catch (e) { console.error('Parse error colors:', e, product.colors); }
+    } else {
+        colors = product.colors.split(',');
+    }
+}
+
+if (product.sizes) {
+    if (product.sizes.startsWith('[')) {
+        try { sizes = JSON.parse(product.sizes); } 
+        catch (e) { console.error('Parse error sizes:', e, product.sizes); }
+    } else {
+        sizes = product.sizes.split(',');
+    }
+}
+
             console.log(`[STOCK API] Đã xử lý 'colors':`, colors);
 
             // Xử lý `sizes`
@@ -364,152 +394,7 @@ app.get('/api/products/:id/stock', (req, res) => {
         }
     });
 });
-// API: Thêm sản phẩm mới
-app.post('/api/products', (req, res) => {
-    console.log('Received product data:', req.body);
-    
-    const { name, brand, price, image, description, stock, colors, sizes } = req.body;
-    
-    // Validate input
-    const errors = [];
-    if (!name || name.trim() === '') errors.push('Tên sản phẩm là bắt buộc');
-    if (!brand || brand.trim() === '') errors.push('Nhãn hiệu là bắt buộc');
-    if (!price || isNaN(price) || price <= 0) errors.push('Giá phải lớn hơn 0');
-    if (!stock || isNaN(stock) || stock < 0) errors.push('Số lượng không hợp lệ');
-    if (!colors || !Array.isArray(colors)) errors.push('Vui lòng chọn màu sắc');
-    if (!sizes || !Array.isArray(sizes)) errors.push('Vui lòng chọn kích thước');
 
-    if (errors.length > 0) {
-        return res.status(400).json({
-            error: 'Missing required fields',
-            details: errors
-        });
-    }
-
-    // Kiểm tra sản phẩm trùng tên
-    db.query('SELECT * FROM products WHERE name = ?', [name.trim()], (err, existingProducts) => {
-        if (err) {
-            console.error('Lỗi khi kiểm tra sản phẩm:', err);
-            return res.status(500).json({
-                error: 'Lỗi khi kiểm tra sản phẩm',
-                details: err.message
-            });
-        }
-
-        if (existingProducts && existingProducts.length > 0) {
-            return res.status(400).json({
-                error: 'Sản phẩm đã tồn tại',
-                details: 'Đã có sản phẩm với tên này trong hệ thống'
-            });
-        }
-
-        // Generate product code
-        generateProductCode(brand)
-            .then(code => {
-                // Ensure colors and sizes are valid JSON arrays
-                const colorsArray = Array.isArray(colors) ? colors : [];
-                const sizesArray = Array.isArray(sizes) ? sizes : [];
-
-                const productData = {
-                    name: name.trim(),
-                    code: code,
-                    brand: brand.trim(),
-                    price: parseInt(price),
-                    image: image.trim(),
-                    description: description.trim(),
-                    stock: parseInt(stock),
-                    colors: JSON.stringify(colorsArray),
-                    sizes: JSON.stringify(sizesArray),
-                    created_at: new Date()
-                };
-
-                // Log product data before insertion
-                console.log('Product data to insert:', productData);
-
-                // Insert new product
-                db.query('INSERT INTO products SET ?', productData, (err, insertResult) => {
-                    if (err) {
-                        console.error('Lỗi khi thêm sản phẩm:', err);
-                        console.error('SQL Error:', err.sqlMessage);
-                        
-                        if (err.code === 'ER_DUP_ENTRY') {
-                            return res.status(400).json({ 
-                                error: 'Mã sản phẩm đã tồn tại',
-                                details: ['Mã sản phẩm đã được sử dụng']
-                            });
-                        }
-                        return res.status(500).json({ 
-                            error: 'Lỗi khi thêm sản phẩm vào cơ sở dữ liệu',
-                            details: [err.message]
-                        });
-                    }
-
-                    // Trả về thông tin sản phẩm vừa thêm
-                    const newProduct = {
-                        id: insertResult.insertId,
-                        ...productData,
-                        created_at: new Date().toISOString()
-                    };
-                    
-                    res.status(200).json(newProduct);
-                });
-            })
-            .catch(error => {
-                console.error('Lỗi khi xử lý thêm sản phẩm:', error);
-                res.status(500).json({ error: 'Lỗi khi xử lý thêm sản phẩm: ' + error.message });
-            });
-    });
-});
-
-// API: Cập nhật sản phẩm
-app.put('/api/products/:id', async (req, res) => {
-    const { id } = req.params;
-    
-    // Log toàn bộ request body để debug
-    console.log('Update request body:', req.body);
-    
-    const { name, brand, price, image, description, stock, colors, sizes } = req.body;
-    
-    // Log extracted values
-    console.log('Extracted values:', {
-        name, brand, price, image, description, stock, colors, sizes,
-        stockType: typeof stock
-    });
-
-    // Convert values to correct types
-    const updateData = {
-        name: String(name || ''),
-        brand: String(brand || ''),
-        price: Number(price || 0),
-        stock: Number(stock || 0),
-        image: String(image || ''),
-        description: String(description || ''),
-        colors: JSON.stringify(colors || []),
-        sizes: JSON.stringify(sizes || [])
-    };
-
-    // Log final update data
-    console.log('Final update data:', updateData);
-
-    const query = 'UPDATE products SET name = ?, brand = ?, price = ?, image = ?, description = ?, stock = ? WHERE id = ?';
-    db.query(query, [
-        updateData.name,
-        updateData.brand,
-        updateData.price,
-        updateData.image,
-        updateData.description,
-        updateData.stock,
-        id
-    ], (err) => {
-        if (err) return res.status(500).json({ error: err });
-        
-        // Trả về sản phẩm sau khi cập nhật
-        db.query('SELECT * FROM products WHERE id = ?', [id], (err, products) => {
-            if (err) return res.status(500).json({ error: err });
-            res.json(products[0]);
-        });
-    });
-});
 
 // API: Xóa sản phẩm
 app.delete('/api/products/:id', (req, res) => {
@@ -675,13 +560,28 @@ app.post('/api/order', (req, res) => {
     db.query('INSERT INTO orders (user_id) VALUES (?)', [user_id], (err, result) => {
         if (err) return res.status(500).json({ error: err });
         const orderId = result.insertId;
-        const values = items.map(item => [orderId, item.product_id, item.color, item.size, item.quantity, item.price]);
-        db.query('INSERT INTO order_items (order_id, product_id, color, size, quantity, price) VALUES ?', [values], (err2) => {
-            if (err2) return res.status(500).json({ error: err2 });
-            res.json({ success: true, orderId });
-        });
-    });
-});
+        const values = items.map(item => [
+    orderId,
+    item.product_id,  // phải là ID số trong bảng products
+    item.color,
+    item.size,
+    item.quantity,
+    item.price,
+    item.status || "Chờ xử lý"
+]);
+
+db.query(
+  'INSERT INTO order_items (order_id, product_id, color, size, quantity, price, status) VALUES ?',
+  [values],
+  (err2) => {
+    if (err2) {
+      console.error('Lỗi khi thêm order_items:', err2);
+      return res.status(500).json({ error: err2 });
+    }
+    res.json({ success: true, orderId });
+  }
+);
+
 
 // API: Lấy giỏ hàng (đơn hàng của user)
 app.get('/api/orders/:user_id', (req, res) => {

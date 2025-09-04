@@ -61,6 +61,7 @@
       <!-- Thông tin sản phẩm bên phải -->
       <div class="flex flex-col">
         <h2 id="product-name" class="text-2xl font-bold mb-2"></h2>
+        <div id="product-id" data-id="123"></div>
         <div class="mb-2">Mã sản phẩm: <span id="product-code" class="text-gray-600"></span></div>
         <div class="mb-4">
           <span id="product-price" class="text-2xl font-bold text-purple-600"></span>
@@ -128,5 +129,38 @@
         <button id="success-ok" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">OK</button>
     </div>
     </div>
+    <script>
+document.getElementById('order-btn').addEventListener('click', function () {
+    const userId = localStorage.getItem('user_id');
+    if (!userId) {
+        alert("Bạn cần đăng nhập để mua hàng!");
+        return;
+    }
+
+    const productId = document.getElementById('product-id').dataset.id;
+    const quantity = parseInt(document.getElementById('quantity-input').value, 10);
+    const price = parseInt(document.getElementById('unit-price').textContent.replace(/\D/g, ''), 10);
+    const color = document.querySelector('#product-colors .selected')?.textContent || '';
+    const size = document.querySelector('#product-sizes .selected')?.textContent || '';
+
+    fetch('http://localhost:3001/api/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            user_id: userId,
+            items: [
+                { product_id: productId, color, size, quantity, price, status: "Đang giao" }
+            ]
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+           document.getElementById('success-modal').classList.remove('hidden');
+        }
+    })
+    .catch(err => console.error('Lỗi đặt hàng:', err));
+});
+      </script>
 </body>
 </html>

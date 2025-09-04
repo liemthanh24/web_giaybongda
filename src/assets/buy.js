@@ -64,7 +64,20 @@ document.addEventListener('DOMContentLoaded', async function () {
         elements.image.src = state.product.image ? `/assets/${state.product.image}` : '';
         elements.unitPrice.textContent = formatCurrency(state.product.price);
     }
+function prepareColorsAndSizes() {
+    let colors = Array.isArray(state.product.colors) ? state.product.colors : [];
+    let sizes  = Array.isArray(state.product.sizes) ? state.product.sizes : [];
 
+    // Nếu rỗng, lấy từ stock keys
+    if ((colors.length === 0 || sizes.length === 0) && state.stock) {
+        const stockKeys = Object.keys(state.stock); // ["Trắng-37", "Trắng-38", "Đen-37", "Đen-38"]
+        colors = [...new Set(stockKeys.map(k => k.split('-')[0]))];
+        sizes  = [...new Set(stockKeys.map(k => k.split('-')[1]))];
+    }
+
+    state.product.colors = colors;
+    state.product.sizes = sizes;
+}
     // Hiển thị các nút chọn màu
     function renderColorOptions() {
         elements.colorsContainer.innerHTML = '';
@@ -106,10 +119,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                 state.selectedColor = colorName;
                 // Cập nhật giao diện cho nút được chọn
                 elements.colorsContainer.querySelectorAll('button').forEach(b => {
-                    b.classList.remove('border-purple-600', 'scale-110');
+                    b.classList.remove('border-purple-600', 'scale-110', 'selected');
                     b.classList.add('border-gray-200');
                 });
-                btn.classList.add('border-purple-600', 'scale-110');
+                btn.classList.add('border-purple-600', 'scale-110', 'selected');
                 btn.classList.remove('border-gray-200');
                 updateUI(); // Cập nhật lại toàn bộ UI khi thay đổi lựa chọn
             });
@@ -232,6 +245,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         // Bắt đầu hiển thị mọi thứ lên giao diện
         renderProductInfo();
+        prepareColorsAndSizes();
         renderColorOptions();
         renderSizeOptions();
 
@@ -239,14 +253,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         const firstColorBtn = elements.colorsContainer.querySelector('button');
         if (firstColorBtn) {
             state.selectedColor = firstColorBtn.dataset.color;
-            firstColorBtn.classList.add('border-purple-600', 'scale-110');
-            firstColorBtn.classList.remove('border-gray-200');
+        firstColorBtn.classList.add('border-purple-600', 'scale-110', 'selected');
         }
 
         const firstSizeBtn = elements.sizesContainer.querySelector('button');
         if (firstSizeBtn) {
             state.selectedSize = firstSizeBtn.dataset.size;
-            firstSizeBtn.classList.add('border-purple-600', 'bg-purple-50');
+            firstSizeBtn.classList.add('border-purple-600', 'bg-purple-50', 'selected');
         }
 
         updateUI();
@@ -275,30 +288,48 @@ elements.orderBtn.addEventListener("click", () => {
 });
 
 // Xử lý nút "Đồng ý"
+// Xử lý nút "Đồng ý"
 confirmOkBtn.addEventListener("click", () => {
   confirmModal.classList.add("hidden");
 
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  const userId = localStorage.getItem("user_id");
+  if (!userId) {
+    alert("Bạn cần đăng nhập để mua hàng!");
+    return;
+  }
 
-  const cartItem = {
-    id: state.product.id,
-    name: state.product.name,
-    code: state.product.code,
-    price: state.product.price,
-    image: state.product.image,
-    brand: state.product.brand,
-    colors: state.selectedColor,
-    sizes: state.selectedSize,
-    quantity: state.quantity
-  };
-
-  cart.push(cartItem);
-  localStorage.setItem("cart", JSON.stringify(cart));
-
-  // Hiện modal thành công
-  successModal.classList.remove("hidden");
-  successModal.classList.add("flex");
+  fetch("http://localhost:3001/api/order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      items: [
+        {
+          product_id: state.product.id,
+          color: state.selectedColor,
+          size: state.selectedSize,
+          quantity: state.quantity,
+          price: state.product.price,
+          status: "Đang giao"   // ✅ đặc biệt cho buy
+        }
+      ]
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      successModal.classList.remove("hidden");
+      successModal.classList.add("flex");
+    } else {
+      alert("Lỗi khi đặt hàng: " + (data.error || "Không rõ nguyên nhân"));
+    }
+  })
+  .catch(err => {
+    console.error("Lỗi API:", err);
+    alert("Không thể kết nối tới server!");
+  });
 });
+
 
 // Xử lý nút "Hủy"
 confirmCancelBtn.addEventListener("click", () => {

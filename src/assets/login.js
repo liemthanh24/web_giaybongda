@@ -24,7 +24,9 @@ window.login(username, password, function(data) {
     if (data.success) {
         // Lưu thông tin user vào localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
-        
+        // Lưu riêng id và username
+        localStorage.setItem('user_id', data.user.id);
+        localStorage.setItem('username', data.user.username);
         // Điều hướng dựa vào role
         if (data.user.role === 'admin') {
             window.location.href = 'revenue-statistics.html';
