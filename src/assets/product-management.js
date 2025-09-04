@@ -96,6 +96,14 @@ function initializeElements() {
     elements.stock = document.getElementById('product-stock');
     elements.image = document.getElementById('product-image');
     elements.description = document.getElementById('product-desc');
+    
+    // Auto-resize textarea
+    if (elements.description) {
+        elements.description.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight + 2) + 'px';
+        });
+    }
     elements.tableBody = document.getElementById('products-list');
     elements.refreshBtn = document.getElementById('refresh-products');
     elements.addBtn = document.getElementById('add-product-btn');
@@ -168,19 +176,47 @@ async function loadProducts() {
     }
 }
 
+// Validate stock based on colors and sizes
+function validateStock(stock, colors, sizes) {
+    const minRequired = colors.length * sizes.length;
+    if (stock < minRequired) {
+        throw new Error('Số lượng không hợp lệ');
+    }
+    return true;
+}
+
 // Handle product form submission
 async function handleProductFormSubmit(event) {
     event.preventDefault();
     
     try {
-        // Get form data
+        // Get form data including colors and sizes
+        const selectedOptions = window.getSelectedOptions();
+        console.log('Selected options:', selectedOptions); // Debug log
+        
+        // Validate colors and sizes selection
+        if (selectedOptions.colors.length === 0) {
+            throw new Error('Vui lòng chọn màu sắc');
+        }
+        if (selectedOptions.sizes.length === 0) {
+            throw new Error('Vui lòng chọn kích thước');
+        }
+
+        // Get stock value
+        const stock = Number(elements.stock?.value) || 0;
+        
+        // Validate stock based on selected colors and sizes
+        validateStock(stock, selectedOptions.colors, selectedOptions.sizes);
+
         const formData = {
             name: elements.name?.value?.trim(),
             brand: elements.brand?.value,
             price: Number(elements.price?.value),
-            stock: Number(elements.stock?.value),
+            stock: stock,
             image: elements.image?.value?.trim() || null,
-            description: elements.description?.value?.trim() || null
+            description: elements.description?.value?.trim() || null,
+            colors: selectedOptions.colors,
+            sizes: selectedOptions.sizes
         };
 
         console.log('Form data:', formData); // Debug log
@@ -201,7 +237,9 @@ async function handleProductFormSubmit(event) {
             price: formData.price,
             stock: formData.stock,
             image: formData.image,
-            description: formData.description
+            description: formData.description,
+            colors: formData.colors,
+            sizes: formData.sizes
         };
 
         if (!productId) {
@@ -238,7 +276,9 @@ async function handleProductFormSubmit(event) {
                 price: Number(formData.price) || 0,
                 stock: Number(formData.stock) || 0,
                 image: String(formData.image || '').trim(),
-                description: String(formData.description || '').trim()
+                description: String(formData.description || '').trim(),
+                colors: formData.colors || [],
+                sizes: formData.sizes || []
             };
             
             // Log the data being sent
@@ -334,6 +374,33 @@ async function editProduct(id) {
         if (elements.price) elements.price.value = product.price;
         if (elements.stock) elements.stock.value = product.stock;
         if (elements.image) elements.image.value = product.image || '';
+        if (elements.description) elements.description.value = product.description || '';
+        
+        // Set colors and sizes
+        if (typeof window.setSelectedOptions === 'function') {
+            try {
+                // Handle colors
+                let colors = [];
+                if (product.colors) {
+                    colors = typeof product.colors === 'string' ? 
+                            JSON.parse(product.colors) : 
+                            Array.isArray(product.colors) ? product.colors : [];
+                }
+                
+                // Handle sizes
+                let sizes = [];
+                if (product.sizes) {
+                    sizes = typeof product.sizes === 'string' ? 
+                            JSON.parse(product.sizes) : 
+                            Array.isArray(product.sizes) ? product.sizes : [];
+                }
+                
+                window.setSelectedOptions(colors, sizes);
+            } catch (e) {
+                console.error('Error parsing colors/sizes:', e);
+                window.setSelectedOptions([], []);
+            }
+        }
         
         // Update modal title and show
         if (elements.title) elements.title.textContent = 'Chỉnh sửa sản phẩm';

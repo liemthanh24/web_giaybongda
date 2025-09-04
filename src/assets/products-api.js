@@ -4,7 +4,7 @@
 window.getProducts = async function() {
     try {
         console.log('Fetching products...');
-        const response = await fetch(window.API_URL + '/products');
+        const response = await fetch(`${window.API_URL}/products`);
         
         const data = await response.json();
         
@@ -78,19 +78,21 @@ async function updateProduct(id, product) {
         // Log the request
         console.log('Đang cập nhật sản phẩm:', { id, product });
         
-        // Ensure product has the correct field name (stock instead of quantity)
+        // Ensure product has the correct fields and convert colors/sizes to JSON if needed
         const updatedProduct = {
             ...product,
-            stock: product.stock ||  0 // Fallback to quantity or 0
+            stock: product.stock || 0,
+            colors: Array.isArray(product.colors) ? product.colors : [],
+            sizes: Array.isArray(product.sizes) ? product.sizes : []
         };
         
         // Log the actual data being sent
         console.log('Sending to API:', {
-            url: `${API_URL}/products/${id}`,
+            url: `${window.API_URL}/products/${id}`,
             data: updatedProduct
         });
         
-        const response = await fetch(`${API_URL}/products/${id}`, {
+        const response = await fetch(`${window.API_URL}/products/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

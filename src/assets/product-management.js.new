@@ -1,0 +1,298 @@
+// Utility Functions
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function formatPrice(price) {
+    if (!price) return '0';
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function generateProductCode(brand) {
+    if (!brand) return 'XX' + Date.now().toString().slice(-6);
+    const prefix = brand.substring(0, 2).toUpperCase();
+    const timestamp = Date.now().toString().slice(-6);
+    return `${prefix}${timestamp}`;
+}
+
+function showNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white z-50`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+// Global Elements Container
+const elements = {
+    modal: null,
+    form: null,
+    title: null,
+    productId: null,
+    name: null,
+    brand: null,
+    price: null,
+    stock: null,
+    image: null,
+    description: null,
+    tableBody: null,
+    refreshBtn: null,
+    addBtn: null,
+    cancelBtn: null,
+    colorsContainer: null,
+    sizesContainer: null
+};
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, waiting for API...');
+    waitForAPI();
+});
+
+function waitForAPI() {
+    if (typeof window.getProducts === 'function') {
+        console.log('API functions detected, initializing...');
+        initializeApp().catch(error => {
+            console.error('Failed to initialize:', error);
+            showNotification('error', 'Initialization error: ' + error.message);
+        });
+    } else {
+        console.log('API not ready, retrying...');
+        setTimeout(waitForAPI, 100);
+    }
+}
+
+// Main initialization
+async function initializeApp() {
+    try {
+        initializeElements();
+        setupEventListeners();
+        await loadProducts();
+        console.log('Application initialized successfully');
+    } catch (error) {
+        console.error('Initialization error:', error);
+        showNotification('error', 'Error initializing: ' + error.message);
+        throw error;
+    }
+}
+
+// Initialize DOM elements
+function initializeElements() {
+    elements.modal = document.getElementById('product-modal');
+    elements.form = document.getElementById('product-form');
+    elements.title = document.getElementById('product-modal-title');
+    elements.productId = document.getElementById('product-id');
+    elements.name = document.getElementById('product-name');
+    elements.brand = document.getElementById('product-brand');
+    elements.price = document.getElementById('product-price');
+    elements.stock = document.getElementById('product-stock');
+    elements.image = document.getElementById('product-image');
+    elements.description = document.getElementById('product-desc');
+    elements.tableBody = document.getElementById('products-list');
+    elements.refreshBtn = document.getElementById('refresh-products');
+    elements.addBtn = document.getElementById('add-product-btn');
+    elements.cancelBtn = document.getElementById('product-cancel');
+    elements.colorsContainer = document.getElementById('colors-container');
+    elements.sizesContainer = document.getElementById('sizes-container');
+}
+
+// Event Listeners Setup
+function setupEventListeners() {
+    elements.form.addEventListener('submit', handleFormSubmit);
+    elements.addBtn.addEventListener('click', () => showModal());
+    elements.cancelBtn.addEventListener('click', hideModal);
+    elements.refreshBtn.addEventListener('click', loadProducts);
+    elements.brand.addEventListener('change', updateCodeFromBrand);
+}
+
+// Get selected colors and sizes
+function getSelectedValues(name) {
+    const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// Set selected colors and sizes
+function setSelectedValues(name, values) {
+    if (!values) return;
+    const valuesArray = typeof values === 'string' ? JSON.parse(values) : values;
+    document.querySelectorAll(`input[name="${name}"]`).forEach(checkbox => {
+        checkbox.checked = valuesArray.includes(checkbox.value);
+    });
+}
+
+// Form Submission Handler
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    
+    const productData = {
+        id: elements.productId.value,
+        name: elements.name.value,
+        brand: elements.brand.value,
+        code: generateProductCode(elements.brand.value),
+        price: parseInt(elements.price.value),
+        stock: parseInt(elements.stock.value),
+        image: elements.image.value,
+        colors: JSON.stringify(getSelectedValues('colors')),
+        sizes: JSON.stringify(getSelectedValues('sizes')),
+        description: elements.description.value
+    };
+
+    try {
+        if (productData.id) {
+            await updateProduct(productData);
+            showNotification('success', 'Cập nhật sản phẩm thành công');
+        } else {
+            await createProduct(productData);
+            showNotification('success', 'Thêm sản phẩm mới thành công');
+        }
+        
+        hideModal();
+        await loadProducts();
+    } catch (error) {
+        console.error('Form submission error:', error);
+        showNotification('error', 'Lỗi: ' + error.message);
+    }
+}
+
+// Show Modal for Add/Edit
+function showModal(product = null) {
+    elements.title.textContent = product ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới';
+    elements.productId.value = product ? product.id : '';
+    elements.name.value = product ? product.name : '';
+    elements.brand.value = product ? product.brand : '';
+    elements.price.value = product ? product.price : 0;
+    elements.stock.value = product ? product.stock : 1;
+    elements.image.value = product ? product.image : '';
+    elements.description.value = product ? product.description : '';
+    
+    // Set colors and sizes
+    if (product) {
+        setSelectedValues('colors', product.colors);
+        setSelectedValues('sizes', product.sizes);
+    } else {
+        // Clear all checkboxes
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    }
+    
+    elements.modal.classList.remove('hidden');
+}
+
+// Hide Modal
+function hideModal() {
+    elements.form.reset();
+    elements.modal.classList.add('hidden');
+}
+
+// Product Creation
+async function createProduct(productData) {
+    try {
+        const response = await window.createProduct(productData);
+        return response;
+    } catch (error) {
+        console.error('Error creating product:', error);
+        throw error;
+    }
+}
+
+// Product Update
+async function updateProduct(productData) {
+    try {
+        const response = await window.updateProduct(productData);
+        return response;
+    } catch (error) {
+        console.error('Error updating product:', error);
+        throw error;
+    }
+}
+
+// Load Products
+async function loadProducts() {
+    try {
+        const products = await window.getProducts();
+        renderProducts(products);
+    } catch (error) {
+        console.error('Error loading products:', error);
+        showNotification('error', 'Không thể tải danh sách sản phẩm');
+    }
+}
+
+// Render Products Table
+function renderProducts(products) {
+    elements.tableBody.innerHTML = products.map(product => `
+        <tr>
+            <td class="px-4 py-3 text-sm">${product.code}</td>
+            <td class="px-4 py-3">
+                <img src="${product.image}" alt="${product.name}" class="h-16 w-16 object-cover mx-auto">
+            </td>
+            <td class="px-4 py-3 text-sm">${product.name}</td>
+            <td class="px-4 py-3 text-sm text-center">${product.brand}</td>
+            <td class="px-4 py-3 text-sm text-right">${formatPrice(product.price)}đ</td>
+            <td class="px-4 py-3 text-sm text-center">${product.stock}</td>
+            <td class="px-4 py-3 text-sm text-center">${formatDate(product.created_at)}</td>
+            <td class="px-4 py-3 text-sm text-center">
+                <button onclick="handleEditClick(${product.id})" class="text-blue-600 hover:text-blue-800 mr-2">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="handleDeleteClick(${product.id}, '${product.name}')" class="text-red-600 hover:text-red-800">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Handle Edit Click
+async function handleEditClick(productId) {
+    try {
+        const product = await window.getProduct(productId);
+        showModal(product);
+    } catch (error) {
+        console.error('Error fetching product:', error);
+        showNotification('error', 'Không thể tải thông tin sản phẩm');
+    }
+}
+
+// Handle Delete Click
+function handleDeleteClick(productId, productName) {
+    const deleteModal = document.getElementById('delete-modal');
+    const deleteMsg = document.getElementById('delete-modal-msg');
+    const confirmBtn = document.getElementById('delete-confirm');
+    const cancelBtn = document.getElementById('delete-cancel');
+
+    deleteMsg.textContent = `Bạn có chắc chắn muốn xóa sản phẩm "${productName}"?`;
+    deleteModal.classList.remove('hidden');
+
+    confirmBtn.onclick = async () => {
+        try {
+            await window.deleteProduct(productId);
+            showNotification('success', 'Xóa sản phẩm thành công');
+            await loadProducts();
+        } catch (error) {
+            console.error('Error deleting product:', error);
+            showNotification('error', 'Không thể xóa sản phẩm');
+        }
+        deleteModal.classList.add('hidden');
+    };
+
+    cancelBtn.onclick = () => {
+        deleteModal.classList.add('hidden');
+    };
+}
+
+// Update code when brand changes
+function updateCodeFromBrand() {
+    if (!elements.productId.value) { // Only for new products
+        const code = generateProductCode(elements.brand.value);
+        console.log('Generated code:', code);
+    }
+}

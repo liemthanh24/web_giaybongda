@@ -10,14 +10,15 @@ const path = require('path');
 app.use(cors());
 app.use(bodyParser.json());
 
-// Serve static files from the web root directory
-app.use(express.static(path.join(__dirname, '..')));
+// Chỉ cần cấu hình này là đủ cho dự án của bạn:
+app.use(express.static(path.join(__dirname, '../src')));
+// Nếu có thư mục assets nằm trong src, thì:
+app.use('/assets', express.static(path.join(__dirname, '../src/assets')));
+// Nếu css nằm trong src/css:
+app.use('/css', express.static(path.join(__dirname, '../src/css')));
 
-// Serve files from src directory
-app.use('/src', express.static(path.join(__dirname, '../src')));
-
-// Serve static assets
-app.use('/assets', express.static(path.join(__dirname, '../assets')));
+// Xóa dòng này nếu không cần thiết:
+// app.use(express.static(path.join(__dirname, '..')));
 
 // Server port
 const PORT = 3001;
@@ -61,7 +62,7 @@ connectDB();
 // API: Cập nhật sản phẩm
 app.put('/api/products/:id', (req, res) => {
     const { id } = req.params;
-    const { name, brand, price, image, description, stock } = req.body;
+    const { name, brand, price, image, description, stock, colors, sizes } = req.body;
 
     // Log request data
     console.log('Update request:', {
@@ -72,6 +73,8 @@ app.put('/api/products/:id', (req, res) => {
     // Convert values to proper types
     const numericStock = parseInt(stock || 0);
     const numericPrice = parseInt(price || 0);
+    const colorsJson = colors ? JSON.stringify(colors) : null;
+    const sizesJson = sizes ? JSON.stringify(sizes) : null;
 
     const query = `
         UPDATE products 
@@ -80,13 +83,20 @@ app.put('/api/products/:id', (req, res) => {
             price = ?, 
             image = ?, 
             description = ?, 
-            stock = ? 
+            stock = ?,
+            colors = CAST(? AS JSON),
+            sizes = CAST(? AS JSON)
         WHERE id = ?
     `;
 
+    // Ensure colors and sizes are valid JSON arrays
+    const colorsArray = Array.isArray(colors) ? colors : [];
+    const sizesArray = Array.isArray(sizes) ? sizes : [];
+
     db.query(
         query,
-        [name, brand, numericPrice, image, description, numericStock, id],
+        [name, brand, numericPrice, image, description, numericStock, 
+         JSON.stringify(colorsArray), JSON.stringify(sizesArray), id],
         (err, result) => {
             if (err) {
                 console.error('Database error:', err);
@@ -135,7 +145,7 @@ app.get('/api/users', (req, res) => {
 // API: Thêm sản phẩm mới
 app.post('/api/products', async (req, res) => {
     try {
-        const { name, brand, price, stock, image, description } = req.body;
+        const { name, brand, price, stock, image, description, colors, sizes } = req.body;
 
         // Validate input
         if (!name || !brand || !price) {
@@ -151,6 +161,8 @@ app.post('/api/products', async (req, res) => {
         // Convert values to proper types
         const numericStock = parseInt(stock || 0);
         const numericPrice = parseInt(price || 0);
+        const colorsJson = colors ? JSON.stringify(colors) : null;
+        const sizesJson = sizes ? JSON.stringify(sizes) : null;
 
         const productData = {
             name: name.trim(),
@@ -160,6 +172,8 @@ app.post('/api/products', async (req, res) => {
             stock: numericStock,
             image: image?.trim() || null,
             description: description?.trim() || null,
+            colors: colorsJson,
+            sizes: sizesJson,
             created_at: new Date()
         };
 
@@ -236,26 +250,11 @@ function generateProductCode(brand) {
         }
     });
 }
-
-// API: Lấy danh sách sản phẩm
+// API: Lấy danh sách tất cả sản phẩm
 app.get('/api/products', (req, res) => {
-    const query = `
-        SELECT 
-            id,
-            name,
-            code,
-            price,
-            image,
-            brand,
-            colors,
-            sizes,
-            stock,
-            description,
-            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as created_at
-        FROM products
-    `;
-    
-    console.log('Executing query:', query);
+    console.log('Đang lấy danh sách tất cả sản phẩm...');
+    // Đảm bảo lấy tất cả các cột cần thiết, bao gồm cả colors và sizes
+    const query = 'SELECT id, name, code, brand, price, image, description, stock, colors, sizes FROM products ORDER BY created_at DESC';
     
     db.query(query, (err, results) => {
         if (err) {
@@ -267,18 +266,109 @@ app.get('/api/products', (req, res) => {
                 }
             });
         }
-        
-        console.log('Query results:', results);
-        console.log('Number of products:', results ? results.length : 0);
-        res.json(results);
-    });
+
+        // Parse colors và sizes trước khi trả về
+        const parsedResults = results.map(product => {
+    let colors = [];
+    let sizes = [];
+    try {
+        colors = product.colors ? JSON.parse(product.colors) : [];
+    } catch (e) {
+        console.error("Parse error colors:", e, product.colors);
+    }
+    try {
+        sizes = product.sizes ? JSON.parse(product.sizes) : [];
+    } catch (e) {
+        console.error("Parse error sizes:", e, product.sizes);
+    }
+    return {
+        ...product,
+        colors: Array.isArray(colors) ? colors : [],
+        sizes: Array.isArray(sizes) ? sizes : []
+    };
+    res.json(parsedResults);
 });
 
+
+// API: Lấy danh sách sản phẩm
+app.get('/api/products/:id/stock', (req, res) => {
+    const { id } = req.params;
+    console.log(`\n--- [STOCK API] Bắt đầu yêu cầu mới cho ID: ${id} ---`);
+
+    const query = 'SELECT stock, colors, sizes FROM products WHERE id = ?';
+
+    db.query(query, [id], (err, results) => {
+        if (err) {
+            console.error(`[STOCK API] LỖI SQL:`, err);
+            return res.status(500).json({ error: 'Lỗi truy vấn cơ sở dữ liệu.' });
+        }
+
+        if (results.length === 0) {
+            console.warn(`[STOCK API] CẢNH BÁO: Không tìm thấy sản phẩm với ID ${id}.`);
+            return res.status(404).json({ error: 'Không tìm thấy sản phẩm.' });
+        }
+
+        const product = results[0];
+        console.log(`[STOCK API] Dữ liệu gốc từ DB:`, product);
+        
+        const stockData = {};
+        let colors = [];
+        let sizes = [];
+
+        // --- BƯỚC PARSE DỮ LIỆU AN TOÀN ---
+        try {
+            // Xử lý `colors`
+            if (product.colors && typeof product.colors === 'string') {
+                colors = JSON.parse(product.colors);
+            } else if (Array.isArray(product.colors)) {
+                colors = product.colors; // Nếu nó đã là một mảng
+            }
+            console.log(`[STOCK API] Đã xử lý 'colors':`, colors);
+
+            // Xử lý `sizes`
+            if (product.sizes && typeof product.sizes === 'string') {
+                sizes = JSON.parse(product.sizes);
+            } else if (Array.isArray(product.sizes)) {
+                sizes = product.sizes; // Nếu nó đã là một mảng
+            }
+            console.log(`[STOCK API] Đã xử lý 'sizes':`, sizes);
+
+            // Kiểm tra kết quả parse
+            if (!Array.isArray(colors) || !Array.isArray(sizes)) {
+                throw new Error('Dữ liệu sau khi parse không phải là mảng.');
+            }
+
+        } catch (parseError) {
+            console.error(`[STOCK API] LỖI PARSE JSON:`, parseError.message);
+            console.error(`[STOCK API] Dữ liệu gốc gây lỗi -> colors:`, product.colors, `(kiểu: ${typeof product.colors})`);
+            console.error(`[STOCK API] Dữ liệu gốc gây lỗi -> sizes:`, product.sizes, `(kiểu: ${typeof product.sizes})`);
+            return res.status(500).json({ error: 'Lỗi định dạng dữ liệu trong CSDL (Parse error).' });
+        }
+
+        // --- BƯỚC TẠO DỮ LIỆU TỒN KHO ---
+        try {
+            colors.forEach(colorObj => {
+                const colorName = colorObj.name || (typeof colorObj === 'string' ? colorObj : 'UnknownColor');
+                sizes.forEach(size => {
+                    const key = `${colorName}-${size}`;
+                    stockData[key] = product.stock;
+                });
+            });
+
+            console.log(`[STOCK API] Đã tạo dữ liệu tồn kho thành công:`, stockData);
+            res.json({ stock: stockData });
+
+        } catch (logicError) {
+            console.error(`[STOCK API] LỖI LOGIC KHI TẠO STOCK:`, logicError);
+            return res.status(500).json({ error: 'Lỗi logic xử lý dữ liệu.' });
+        }
+    });
+});
 // API: Thêm sản phẩm mới
 app.post('/api/products', (req, res) => {
     console.log('Received product data:', req.body);
     
-    const { name, brand, price, image, description, stock } = req.body;
+    const { name, brand, price, image, description, stock, colors, sizes } = req.body;
     
     // Validate input
     const errors = [];
@@ -286,8 +376,8 @@ app.post('/api/products', (req, res) => {
     if (!brand || brand.trim() === '') errors.push('Nhãn hiệu là bắt buộc');
     if (!price || isNaN(price) || price <= 0) errors.push('Giá phải lớn hơn 0');
     if (!stock || isNaN(stock) || stock < 0) errors.push('Số lượng không hợp lệ');
-    if (!image || image.trim() === '') errors.push('Link ảnh là bắt buộc');
-    if (!description || description.trim() === '') errors.push('Mô tả là bắt buộc');
+    if (!colors || !Array.isArray(colors)) errors.push('Vui lòng chọn màu sắc');
+    if (!sizes || !Array.isArray(sizes)) errors.push('Vui lòng chọn kích thước');
 
     if (errors.length > 0) {
         return res.status(400).json({
@@ -316,6 +406,10 @@ app.post('/api/products', (req, res) => {
         // Generate product code
         generateProductCode(brand)
             .then(code => {
+                // Ensure colors and sizes are valid JSON arrays
+                const colorsArray = Array.isArray(colors) ? colors : [];
+                const sizesArray = Array.isArray(sizes) ? sizes : [];
+
                 const productData = {
                     name: name.trim(),
                     code: code,
@@ -324,7 +418,9 @@ app.post('/api/products', (req, res) => {
                     image: image.trim(),
                     description: description.trim(),
                     stock: parseInt(stock),
-                    created_at: new Date() // Thêm created_at
+                    colors: JSON.stringify(colorsArray),
+                    sizes: JSON.stringify(sizesArray),
+                    created_at: new Date()
                 };
 
                 // Log product data before insertion
@@ -372,11 +468,11 @@ app.put('/api/products/:id', async (req, res) => {
     // Log toàn bộ request body để debug
     console.log('Update request body:', req.body);
     
-    const { name, brand, price, image, description, stock } = req.body;
+    const { name, brand, price, image, description, stock, colors, sizes } = req.body;
     
     // Log extracted values
     console.log('Extracted values:', {
-        name, brand, price, image, description, stock,
+        name, brand, price, image, description, stock, colors, sizes,
         stockType: typeof stock
     });
 
@@ -387,7 +483,9 @@ app.put('/api/products/:id', async (req, res) => {
         price: Number(price || 0),
         stock: Number(stock || 0),
         image: String(image || ''),
-        description: String(description || '')
+        description: String(description || ''),
+        colors: JSON.stringify(colors || []),
+        sizes: JSON.stringify(sizes || [])
     };
 
     // Log final update data

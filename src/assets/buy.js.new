@@ -1,0 +1,218 @@
+// Global state
+const state = {
+    selectedColor: null,
+    selectedSize: null,
+    product: null,
+    stock: {},
+    quantity: 1
+};
+
+// Utility Functions
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+    }).format(amount).replace('₫', 'đ');
+}
+
+function showNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white z-50`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+// Helper Functions
+function getAvailableStock() {
+    if (!state.selectedColor || !state.selectedSize) return 0;
+    const stockKey = `${state.selectedColor}-${state.selectedSize}`;
+    return state.stock[stockKey] || 0;
+}
+
+// UI Update Functions
+function updateProductInfo() {
+    document.getElementById('product-image').src = state.product.image;
+    document.getElementById('product-name').textContent = state.product.name;
+    document.getElementById('product-code').textContent = state.product.code;
+    document.getElementById('product-price').textContent = formatCurrency(state.product.price);
+}
+
+function updateColorButtons() {
+    const container = document.getElementById('product-colors');
+    const colors = [
+        { name: 'Đen', value: '#000000' },
+        { name: 'Trắng', value: '#FFFFFF' },
+        { name: 'Đỏ', value: '#FF0000' },
+        { name: 'Xanh dương', value: '#0000FF' },
+        { name: 'Xanh lá', value: '#00FF00' }
+    ];
+
+    container.innerHTML = colors.map(color => {
+        const isAvailable = state.product.colors.includes(color.value);
+        const isSelected = state.selectedColor === color.value;
+        return `
+            <div class="color-option-container">
+                <button class="w-12 h-12 rounded-full border-2 transition-all duration-200
+                        ${isSelected ? 'border-purple-600 scale-110' : 'border-gray-200'} 
+                        ${isAvailable ? '' : 'opacity-50'}"
+                        style="background-color: ${color.value}"
+                        data-color="${color.value}"
+                        ${!isAvailable ? 'disabled' : ''}
+                        onclick="handleColorSelect('${color.value}')">
+                </button>
+                <span class="block text-center text-sm mt-1">${color.name}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateSizeButtons() {
+    const container = document.getElementById('product-sizes');
+    const sizes = ['38', '39', '40', '41', '42', '43'];
+
+    container.innerHTML = sizes.map(size => {
+        const isAvailable = state.product.sizes.includes(size);
+        const isSelected = state.selectedSize === size;
+        return `
+            <button class="min-w-[3rem] h-10 border rounded-lg text-base
+                    ${isSelected ? 'border-purple-600 bg-purple-50' : 'border-gray-300'} 
+                    ${isAvailable ? 'hover:border-purple-600' : 'opacity-50'}"
+                    ${!isAvailable ? 'disabled' : ''}
+                    onclick="handleSizeSelect('${size}')">
+                ${size}
+            </button>
+        `;
+    }).join('');
+}
+
+function updateQuantityControls() {
+    const maxStock = getAvailableStock();
+    const input = document.getElementById('quantity-input');
+    const status = document.getElementById('stock-status');
+    
+    input.value = Math.min(state.quantity, maxStock);
+    input.max = maxStock;
+    input.disabled = maxStock === 0;
+    
+    if (maxStock > 0) {
+        status.textContent = `(Còn ${maxStock} sản phẩm)`;
+        status.className = 'text-green-600 text-sm';
+    } else {
+        status.textContent = '(Hết hàng)';
+        status.className = 'text-red-500 text-sm';
+    }
+}
+
+function updatePriceDisplay() {
+    const unitPrice = state.product.price;
+    const total = unitPrice * state.quantity;
+    
+    document.getElementById('unit-price').textContent = formatCurrency(unitPrice);
+    document.getElementById('total-amount').textContent = formatCurrency(total);
+}
+
+// Event Handlers
+function handleColorSelect(color) {
+    state.selectedColor = color;
+    updateColorButtons();
+    updateSizeButtons();
+    updateQuantityControls();
+    updatePriceDisplay();
+}
+
+function handleSizeSelect(size) {
+    state.selectedSize = size;
+    updateSizeButtons();
+    updateQuantityControls();
+    updatePriceDisplay();
+}
+
+function handleQuantityChange(change) {
+    const maxStock = getAvailableStock();
+    const newQuantity = state.quantity + change;
+    
+    if (newQuantity >= 1 && newQuantity <= maxStock) {
+        state.quantity = newQuantity;
+        updateQuantityControls();
+        updatePriceDisplay();
+    }
+}
+
+async function handleOrder() {
+    if (!state.selectedColor || !state.selectedSize) {
+        showNotification('error', 'Vui lòng chọn màu sắc và kích thước');
+        return;
+    }
+
+    if (state.quantity < 1) {
+        showNotification('error', 'Vui lòng chọn số lượng hợp lệ');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                productId: state.product.id,
+                color: state.selectedColor,
+                size: state.selectedSize,
+                quantity: state.quantity
+            })
+        });
+
+        if (!response.ok) throw new Error('Đặt hàng thất bại');
+
+        showNotification('success', 'Đặt hàng thành công!');
+        setTimeout(() => window.location.href = '/cart.html', 1500);
+    } catch (error) {
+        showNotification('error', 'Đã có lỗi xảy ra khi đặt hàng');
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // Load product data
+        const productDetail = JSON.parse(localStorage.getItem('selectedProduct'));
+        if (!productDetail) {
+            showNotification('error', 'Không tìm thấy thông tin sản phẩm!');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // Fetch product and stock data
+        const [productResponse, stockResponse] = await Promise.all([
+            fetch(`/api/products/${productDetail.id}`),
+            fetch(`/api/products/${productDetail.id}/stock`)
+        ]);
+
+        if (!productResponse.ok || !stockResponse.ok) {
+            throw new Error('Không thể lấy thông tin sản phẩm hoặc tồn kho');
+        }
+
+        state.product = await productResponse.json();
+        state.stock = await stockResponse.json();
+
+        // Initialize UI
+        updateProductInfo();
+        updateColorButtons();
+        updateSizeButtons();
+        updateQuantityControls();
+        updatePriceDisplay();
+
+        // Set up event listeners
+        document.getElementById('decrease-quantity').onclick = () => handleQuantityChange(-1);
+        document.getElementById('increase-quantity').onclick = () => handleQuantityChange(1);
+        document.getElementById('order-btn').onclick = handleOrder;
+
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('error', 'Đã có lỗi xảy ra khi tải thông tin sản phẩm');
+    }
+});

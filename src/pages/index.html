@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giày Bóng Đá</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/src/assets/products-api.js"></script>
-    <script src="/src/assets/cart-api.js"></script>
-    <script src="/src/assets/script.js"></script>
+    <script src="/../assets/products-api.js"></script>
+    <script src="/../assets/cart-api.js"></script>
+    <script src="/../assets/script.js"></script>
+    <link rel="stylesheet" href="../css/style.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; }
@@ -212,9 +213,9 @@
                         <span class="text-lg text-gray-400 line-through">2,900,000đ</span>
                     </div>
                     <div class="flex gap-2 w-full mt-auto">
-                        <button onclick="showBuy(2)" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
+                       <button onclick="showBuy(2)" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
                             <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4 mr-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A1 1 0 007.6 17h8.8a1 1 0 00.95-1.3L17 13M7 13V6a1 1 0 011-1h9a1 1 0 011 1v7'/></svg><span>MUA NGAY</span></button>
-                        <button onclick="showDetail(2)" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
+                       <button onclick="showDetail(2)" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
                             <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4 mr-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'/><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'/></svg><span>CHI TIẾT</span>
                         </button>
                     </div>
@@ -267,9 +268,10 @@
                         <!-- Removed old price display -->
                     </div>
                     <div class="flex gap-2 w-full mt-auto">
-                        <button onclick="showBuy('${product.id}', '${product.name}', '${product.code}', ${product.price}, '${product.image}', '${product.brand}')" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
+                        <button onclick='showBuy(${JSON.stringify(product)})' class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
                             <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4 mr-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A1 1 0 007.6 17h8.8a1 1 0 00.95-1.3L17 13M7 13V6a1 1 0 011-1h9a1 1 0 011 1v7'/></svg><span>MUA NGAY</span></button>
-                        <button onclick="showDetail('${product.id}', '${product.name}', '${product.code}', ${product.price}, '${product.image}', '${product.brand}')" class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
+
+                        <button onclick='showDetail(${JSON.stringify(product)})' class="flex-1 px-2 py-1 border border-black rounded font-semibold flex items-center justify-center gap-1 text-xs hover:bg-gray-100 min-w-[90px]">
                             <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4 mr-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'/><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'/></svg><span>CHI TIẾT</span>
                         </button>
                     </div>
@@ -283,6 +285,7 @@
     }
 
     // Biến lưu trữ nhãn hàng đang được chọn
+    let allProducts = [];
     let selectedBrand = 'Tất cả';
 
     // Hàm sắp xếp và lọc sản phẩm
@@ -354,33 +357,16 @@
         }
     });
 
-    function showBuy(id, name, code, price, image, brand) {
-        // Lưu thông tin sản phẩm vào localStorage
-        const productInfo = {
-            id: id,
-            name: name,
-            code: code,
-            price: price,
-            image: image,
-            brand: brand
-        };
-        localStorage.setItem('selectedProduct', JSON.stringify(productInfo));
-        window.location.href = 'buy.html';
-    }
+    function showBuy(product) {
+    localStorage.setItem('selectedProduct', JSON.stringify(product));
+    window.location.href = 'buy.html';
+}
 
-    function showDetail(id, name, code, price, image, brand) {
-        // Lưu thông tin sản phẩm vào localStorage cho trang chi tiết
-        const productInfo = {
-            id: id,
-            name: name,
-            code: code,
-            price: price,
-            image: image,
-            brand: brand
-        };
-        localStorage.setItem('productDetail', JSON.stringify(productInfo));
-        window.location.href = 'product-detail.html';
-    }
+    function showDetail(product) {
+    localStorage.setItem('productDetail', JSON.stringify(product));
+    window.location.href = 'product-detail.html';
+}
+
 </script>
 </body>
 </html>
