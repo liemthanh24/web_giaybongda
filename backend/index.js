@@ -275,23 +275,25 @@ app.get('/api/products', (req, res) => {
 
     // Xử lý colors
     if (product.colors) {
-        if (product.colors.startsWith('[')) {
+        const colorsStr = String(product.colors);
+        if (colorsStr.startsWith('[')) {
             // JSON chuẩn
-            try { colors = JSON.parse(product.colors); } 
-            catch (e) { console.error('Parse error colors:', e, product.colors); }
+            try { colors = JSON.parse(colorsStr); } 
+            catch (e) { console.error('Parse error colors:', e, colorsStr); }
         } else {
             // Dữ liệu cũ kiểu "Trắng,Đen"
-            colors = product.colors.split(',');
+            colors = colorsStr.split(',');
         }
     }
 
     // Xử lý sizes
     if (product.sizes) {
-        if (product.sizes.startsWith('[')) {
-            try { sizes = JSON.parse(product.sizes); } 
-            catch (e) { console.error('Parse error sizes:', e, product.sizes); }
+        const sizesStr = String(product.sizes);
+        if (sizesStr.startsWith('[')) {
+            try { sizes = JSON.parse(sizesStr); } 
+            catch (e) { console.error('Parse error sizes:', e, sizesStr); }
         } else {
-            sizes = product.sizes.split(',');
+            sizes = sizesStr.split(',');
         }
     }
 
@@ -305,95 +307,85 @@ res.json(parsedResults);
  });
 });
 
-
-
-// API: Lấy danh sách sản phẩm
+// API: Lấy danh sách sản phẩm (stock theo biến thể color-size)
 app.get('/api/products/:id/stock', (req, res) => {
-    const { id } = req.params;
-    console.log(`\n--- [STOCK API] Bắt đầu yêu cầu mới cho ID: ${id} ---`);
+  const { id } = req.params;
+  console.log(`\n--- [STOCK API] Bắt đầu yêu cầu mới cho ID: ${id} ---`);
 
-    const query = 'SELECT stock, colors, sizes FROM products WHERE id = ?';
-
-    db.query(query, [id], (err, results) => {
-        if (err) {
-            console.error(`[STOCK API] LỖI SQL:`, err);
-            return res.status(500).json({ error: 'Lỗi truy vấn cơ sở dữ liệu.' });
-        }
-
-        if (results.length === 0) {
-            console.warn(`[STOCK API] CẢNH BÁO: Không tìm thấy sản phẩm với ID ${id}.`);
-            return res.status(404).json({ error: 'Không tìm thấy sản phẩm.' });
-        }
-
-        const product = results[0];
-        console.log(`[STOCK API] Dữ liệu gốc từ DB:`, product);
-        
-        const stockData = {};
-        let colors = [];
-        let sizes = [];
-
-        // --- BƯỚC PARSE DỮ LIỆU AN TOÀN ---
-        try {
-            // Xử lý `colors`
-            if (product.colors) {
-    if (product.colors.startsWith('[')) {
-        try { colors = JSON.parse(product.colors); } 
-        catch (e) { console.error('Parse error colors:', e, product.colors); }
-    } else {
-        colors = product.colors.split(',');
+  const query = 'SELECT stock, colors, sizes FROM products WHERE id = ?';
+  db.query(query, [id], (err, results) => {
+    if (err) {
+      console.error(`[STOCK API] LỖI SQL:`, err);
+      return res.status(500).json({ error: 'Lỗi truy vấn cơ sở dữ liệu.' });
     }
-}
 
-if (product.sizes) {
-    if (product.sizes.startsWith('[')) {
-        try { sizes = JSON.parse(product.sizes); } 
-        catch (e) { console.error('Parse error sizes:', e, product.sizes); }
-    } else {
-        sizes = product.sizes.split(',');
+    if (!results || results.length === 0) {
+      console.warn(`[STOCK API] Không tìm thấy sản phẩm với ID ${id}.`);
+      return res.status(404).json({ error: 'Không tìm thấy sản phẩm.' });
     }
-}
 
-            console.log(`[STOCK API] Đã xử lý 'colors':`, colors);
+    const product = results[0];
+    console.log(`[STOCK API] Dữ liệu gốc từ DB:`, product);
 
-            // Xử lý `sizes`
-            if (product.sizes && typeof product.sizes === 'string') {
-                sizes = JSON.parse(product.sizes);
-            } else if (Array.isArray(product.sizes)) {
-                sizes = product.sizes; // Nếu nó đã là một mảng
-            }
-            console.log(`[STOCK API] Đã xử lý 'sizes':`, sizes);
-
-            // Kiểm tra kết quả parse
-            if (!Array.isArray(colors) || !Array.isArray(sizes)) {
-                throw new Error('Dữ liệu sau khi parse không phải là mảng.');
-            }
-
-        } catch (parseError) {
-            console.error(`[STOCK API] LỖI PARSE JSON:`, parseError.message);
-            console.error(`[STOCK API] Dữ liệu gốc gây lỗi -> colors:`, product.colors, `(kiểu: ${typeof product.colors})`);
-            console.error(`[STOCK API] Dữ liệu gốc gây lỗi -> sizes:`, product.sizes, `(kiểu: ${typeof product.sizes})`);
-            return res.status(500).json({ error: 'Lỗi định dạng dữ liệu trong CSDL (Parse error).' });
+    // --- Helper: chuyển mọi kiểu về mảng string ---
+    function toArray(val) {
+      if (val == null) return [];
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'object') {
+        // object có thể là {0: "Đen",1:"Trắng"} -> lấy values
+        try { return Object.values(val); } catch { return []; }
+      }
+      if (typeof val === 'string') {
+        const s = val.trim();
+        // nếu string là JSON array
+        if (s.startsWith('[') && s.endsWith(']')) {
+          try { const p = JSON.parse(s); return Array.isArray(p) ? p : [s]; }
+          catch { /* rơi qua - sẽ tách bằng dấu phẩy */ }
         }
+        // tách chuỗi bằng dấu phẩy
+        return s.split(',').map(x => x.trim()).filter(Boolean);
+      }
+      // fallback thành chuỗi 1 phần tử
+      return [String(val)];
+    }
 
-        // --- BƯỚC TẠO DỮ LIỆU TỒN KHO ---
-        try {
-            colors.forEach(colorObj => {
-                const colorName = colorObj.name || (typeof colorObj === 'string' ? colorObj : 'UnknownColor');
-                sizes.forEach(size => {
-                    const key = `${colorName}-${size}`;
-                    stockData[key] = product.stock;
-                });
-            });
+    // --- Parse an toàn ---
+    let colors = [];
+    let sizes = [];
+    try {
+      colors = toArray(product.colors);
+      sizes  = toArray(product.sizes);
 
-            console.log(`[STOCK API] Đã tạo dữ liệu tồn kho thành công:`, stockData);
-            res.json({ stock: stockData });
+      if (!Array.isArray(colors) || !Array.isArray(sizes)) {
+        throw new Error('Dữ liệu colors/sizes sau xử lý không phải mảng.');
+      }
+    } catch (parseError) {
+      console.error(`[STOCK API] LỖI PARSE JSON:`, parseError.message);
+      console.error(`[STOCK API] Dữ liệu gốc gây lỗi -> colors:`, product.colors, `(kiểu: ${typeof product.colors})`);
+      console.error(`[STOCK API] Dữ liệu gốc gây lỗi -> sizes:`, product.sizes, `(kiểu: ${typeof product.sizes})`);
+      return res.status(500).json({ error: 'Lỗi định dạng dữ liệu trong CSDL (Parse error).' });
+    }
 
-        } catch (logicError) {
-            console.error(`[STOCK API] LỖI LOGIC KHI TẠO STOCK:`, logicError);
-            return res.status(500).json({ error: 'Lỗi logic xử lý dữ liệu.' });
-        }
+    // --- Tạo map tồn kho cho từng biến thể color-size ---
+    const stockData = {};
+    const baseStock = Number(product.stock) || 0; // fallback nếu bạn lưu stock chung trong products
+
+    colors.forEach(colorItem => {
+      const colorName = (typeof colorItem === 'string') ? colorItem : (colorItem && (colorItem.name || colorItem.value)) || String(colorItem);
+      sizes.forEach(sizeItem => {
+        const sizeVal = String(sizeItem);
+        const key = `${colorName}-${sizeVal}`;
+        // Nếu bạn chưa có bảng chi tiết số lượng theo biến thể, dùng baseStock; 
+        // nếu có bảng chi tiết, thay logic để query bảng đó.
+        stockData[key] = baseStock;
+      });
     });
+
+    console.log(`[STOCK API] Đã tạo dữ liệu tồn kho thành công:`, stockData);
+    return res.json({ stock: stockData });
+  });
 });
+
 
 
 // API: Xóa sản phẩm
@@ -556,31 +548,59 @@ app.post('/api/login', (req, res) => {
 
 // API: Đặt hàng
 app.post('/api/order', (req, res) => {
-    const { user_id, items } = req.body;
-    db.query('INSERT INTO orders (user_id) VALUES (?)', [user_id], (err, result) => {
-        if (err) return res.status(500).json({ error: err });
-        const orderId = result.insertId;
-        const values = items.map(item => [
-    orderId,
-    item.product_id,  // phải là ID số trong bảng products
-    item.color,
-    item.size,
-    item.quantity,
-    item.price,
-    item.status || "Chờ xử lý"
-]);
+  const { user_id, items } = req.body;
 
-db.query(
-  'INSERT INTO order_items (order_id, product_id, color, size, quantity, price, status) VALUES ?',
-  [values],
-  (err2) => {
-    if (err2) {
-      console.error('Lỗi khi thêm order_items:', err2);
-      return res.status(500).json({ error: err2 });
-    }
-    res.json({ success: true, orderId });
+  if (!user_id || !items || !Array.isArray(items)) {
+    return res.status(400).json({ error: 'Dữ liệu không hợp lệ' });
   }
-);
+
+  // Duyệt từng item trong order
+  items.forEach(item => {
+    const { product_id, color, size, quantity, price, status } = item;
+
+    // 1️⃣ Trừ tồn kho trong bảng stock
+    const updateStock = `
+      UPDATE stock 
+      SET stock = stock - ? 
+      WHERE product_id = ? AND color = ? AND size = ?
+    `;
+    db.query(updateStock, [quantity, product_id, color, size], (err) => {
+      if (err) console.error("Lỗi update stock:", err);
+    });
+
+    // 2️⃣ Tăng doanh thu cho sản phẩm
+    const updateRevenueProduct = `
+      UPDATE products 
+      SET revenue = revenue + (? * ?)
+      WHERE id = ?
+    `;
+    db.query(updateRevenueProduct, [quantity, price, product_id], (err) => {
+      if (err) console.error("Lỗi update revenue product:", err);
+    });
+
+    // 3️⃣ Tăng doanh thu cho thương hiệu
+    const updateRevenueBrand = `
+      UPDATE brands b
+      JOIN products p ON b.id = p.brand_id
+      SET b.revenue = b.revenue + (? * ?)
+      WHERE p.id = ?
+    `;
+    db.query(updateRevenueBrand, [quantity, price, product_id], (err) => {
+      if (err) console.error("Lỗi update revenue brand:", err);
+    });
+
+    // 4️⃣ Lưu order vào bảng orders (ví dụ bảng order_items)
+    const insertOrder = `
+      INSERT INTO orders (user_id, product_id, color, size, quantity, price, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    db.query(insertOrder, [user_id, product_id, color, size, quantity, price, status], (err) => {
+      if (err) console.error("Lỗi insert order:", err);
+    });
+  });
+
+  res.json({ success: true, message: 'Đặt hàng thành công' });
+});
 
 
 // API: Lấy giỏ hàng (đơn hàng của user)

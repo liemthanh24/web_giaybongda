@@ -301,6 +301,19 @@ async function handleProductFormSubmit(event) {
         showNotification('error', 'Lỗi: ' + error.message);
     }
 }
+// 🔄 Hàm lấy tồn kho mới nhất theo productId
+async function refreshStock(productId) {
+    try {
+        const res = await fetch(`${API_URL}/products/${productId}/stock`);
+        if (!res.ok) throw new Error("Không thể tải tồn kho");
+        const data = await res.json();
+        console.log("[refreshStock] Stock mới cho", productId, data);
+        return data.stock;
+    } catch (err) {
+        console.error("[refreshStock] Lỗi:", err);
+        return null;
+    }
+}
 
 // Render products table
 function renderProductsTable(products) {
@@ -308,7 +321,7 @@ function renderProductsTable(products) {
     
     elements.tableBody.innerHTML = '';
     
-    products.forEach(product => {
+    products.forEach(async (product) => {   // 👈 dùng async để có thể await
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50 border-b border-gray-200';
         row.innerHTML = `
@@ -329,8 +342,11 @@ function renderProductsTable(products) {
             <td class="w-32 px-4 py-3 text-right">
                 <span class="text-sm font-medium text-gray-800">${formatPrice(product.price)}đ</span>
             </td>
-            <td class="w-24 px-4 py-3 text-center">
-                <span class="text-sm font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}">${product.stock || 0}</span>
+            <!-- 👇 gán id cho cột stock -->
+            <td class="w-24 px-4 py-3 text-center" id="stock-${product.id}">
+                <span class="text-sm font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}">
+                    ${product.stock || 0}
+                </span>
             </td>
             <td class="w-40 px-4 py-3 text-center">
                 <span class="text-sm text-gray-500 whitespace-nowrap">${formatDate(product.created_at)}</span>
@@ -338,21 +354,31 @@ function renderProductsTable(products) {
             <td class="w-28 px-4 py-3">
                 <div class="flex justify-center items-center space-x-2">
                     <button onclick="editProduct('${product.id}')" class="p-1 rounded text-blue-600 hover:bg-blue-50">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
+                        ✏️
                     </button>
                     <button onclick="deleteProduct('${product.id}')" class="p-1 rounded text-red-600 hover:bg-red-50">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
+                        🗑️
                     </button>
                 </div>
             </td>
         `;
         elements.tableBody.appendChild(row);
+
+        // 🔄 Gọi API lấy stock mới nhất rồi update vào cell
+        const newStock = await refreshStock(product.id);
+        if (newStock !== null) {
+            const stockCell = document.getElementById(`stock-${product.id}`);
+            if (stockCell) {
+                stockCell.innerHTML = `
+                    <span class="text-sm font-medium ${newStock > 0 ? 'text-green-600' : 'text-red-600'}">
+                        ${newStock}
+                    </span>
+                `;
+            }
+        }
     });
 }
+
 
 // Edit product
 async function editProduct(id) {
