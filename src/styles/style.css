@@ -1,0 +1,189 @@
+/* AUTH FORM STYLES */
+.auth-section {
+    max-width: 430px;
+    margin: 2.5rem auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    padding: 2.5rem 2rem 2rem 2rem;
+    position: relative;
+}
+.auth-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.shop-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #a000e6;
+    margin-bottom: 0.2rem;
+    letter-spacing: 1px;
+}
+.shop-sub {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+.back-link {
+    position: absolute;
+    left: 1.2rem;
+    top: 1.2rem;
+    color: #e60000;
+    font-size: 1.5rem;
+    text-decoration: none;
+    font-weight: bold;
+}
+.auth-form {
+    margin-bottom: 0.5rem;
+}
+.form-group {
+    margin-bottom: 1.2rem;
+    text-align: left;
+}
+.label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+    color: #a000e6;
+    font-size: 1rem;
+}
+.auth-form input, .auth-form select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    background: #f7f9fa;
+    margin-bottom: 0.2rem;
+    transition: border 0.2s;
+}
+.auth-form input:focus, .auth-form select:focus {
+    border: 1.5px solid #a000e6;
+    outline: none;
+}
+.btn-auth {
+    width: 100%;
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-radius: 8px;
+    border: none;
+    padding: 0.75rem;
+    color: #fff;
+    cursor: pointer;
+}
+.gradient {
+    background: linear-gradient(90deg, #ff2a2a 0%, #a000e6 100%);
+}
+.error-msg {
+    color: #e60000;
+    margin-top: 0.5rem;
+    font-size: 1rem;
+    text-align: center;
+}
+.auth-link {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 1rem;
+}
+/* CSS chung cho toàn bộ web */
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+    /* Đăng nhập */
+    #login-section {
+        max-width: 600px;
+        margin: 3rem auto;
+        background: #fff;
+        padding: 2.5rem 2rem 2rem 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        text-align: center;
+        position: relative;
+    }
+    }
+    #login-form input {
+        width: 100%;
+        padding: 0.75rem;
+        margin: 0.5rem 0 1rem 0;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        background: #f7f9fa;
+    }
+    }
+    #login-form button {
+        width: 100%;
+        margin-top: 1rem;
+        background: #ff6a00;
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border-radius: 6px;
+        border: none;
+        padding: 0.75rem;
+        transition: background 0.2s;
+    }
+    button.btn-login:hover {
+        background: #e65c00;
+    }
+    .form-group {
+        margin-bottom: 1.2rem;
+        text-align: left;
+    }
+    }
+header {
+    background: #222;
+    color: #fff;
+    padding: 1rem;
+    text-align: center;
+}
+nav a {
+    color: #fff;
+    margin: 0 1rem;
+    text-decoration: none;
+}
+main {
+    max-width: 900px;
+    margin: 2rem auto;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+#products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+.product {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 1rem;
+    text-align: center;
+}
+.product img {
+    width: 100%;
+    max-width: 180px;
+    height: auto;
+    margin-bottom: 1rem;
+}
+button {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+button:hover {
+    background: #0056b3;
+}
+#cart {
+    margin-top: 2rem;
+}

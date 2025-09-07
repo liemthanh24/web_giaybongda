@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết sản phẩm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+ 
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header giống index.html -->
+    <header class="bg-white shadow flex items-center justify-between px-8 py-4">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+            <img src="../../assets/soccer-shoes-logo.svg" alt="logo" class="h-8 w-8">
+            <span class="text-2xl font-bold text-purple-600">Giày Bóng Đá</span>
+        </div>
+        <div class="flex-1 mx-8 relative">
+            <input type="text" placeholder="Tìm kiếm giày..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-gray-700 text-xl font-semibold flex items-center">Chào, <span class="ml-1">user</span>
+                <button onclick="window.location.href='cart.html'" class="ml-2 p-2 rounded-full hover:bg-gray-100">
+                    <img src="https://thafd.bing.com/th/id/OIP.u-1dWGTM7biu51ZxKpOIiAHaFL?w=277&h=194&c=7&r=0&o=7&cb=thfvnext&dpr=1.3&pid=1.7&rm=3" alt="shopping cart" class="h-14 w-14 object-contain" style="background: transparent;">
+                </button>
+                <button id="logout-btn" class="ml-2 p-2 rounded-full hover:bg-gray-100 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
+                <script>
+                document.getElementById('logout-btn').onclick = function() {
+                    localStorage.removeItem('username');
+                    window.location.href = 'login.html';
+                };
+                </script>
+            </span>
+        </div>
+    </header>
+    <main class="flex items-center justify-center w-full min-h-[calc(100vh-80px)] pt-[80px]">
+  <div class="bg-white rounded-xl shadow-lg flex flex-col md:flex-row p-8 gap-8 max-w-4xl w-full">
+    <!-- Ảnh sản phẩm -->
+    <div class="flex-shrink-0 flex items-center justify-center w-full md:w-1/2">
+      <img id="product-image" alt="Sản phẩm" class="w-full max-w-xs h-auto object-contain rounded-xl border">
+    </div>
+    <!-- Thông tin sản phẩm -->
+    <div class="flex-1 flex flex-col">
+      <h2 id="product-name" class="text-2xl font-bold mb-2"></h2>
+      <div id="product-id" data-id="123"></div>
+      <div class="mb-2">Mã sản phẩm: <span id="product-code" class="text-gray-600"></span></div>
+      <div class="mb-4">
+        <span id="product-price" class="text-2xl font-bold text-purple-600"></span>
+      </div>
+<!-- Mô tả sản phẩm -->
+<div class="mb-4">
+  <div class="font-semibold mb-1">Mô tả</div>
+  <div id="product-description" 
+     class="p-3 border rounded-lg bg-gray-50 text-gray-700 text-sm leading-relaxed 
+            break-words break-all whitespace-pre-line max-h-40 overflow-y-auto">
+</div>
+</div>
+
+      <div class="mb-4">
+        <div class="font-semibold mb-1">Màu sắc</div>
+        <div id="product-colors" class="flex gap-4 flex-wrap">
+            
+          <!-- màu sẽ render bằng JS -->
+        </div>
+      </div>
+      <div class="mb-4">
+        <div class="font-semibold mb-1">Kích thước</div>
+        <div id="product-sizes" class="flex gap-3 flex-wrap">
+          <!-- size render bằng JS -->
+        </div>
+      </div>
+      <div class="mb-4">
+        <div class="font-semibold mb-1">Số lượng</div>
+        <div class="flex items-center gap-2">
+          <button id="decrease-quantity" class="w-8 h-8 flex items-center justify-center border rounded-lg">-</button>
+          <input type="number" id="quantity-input" value="1" min="1" class="w-16 text-center border rounded-lg px-2 py-1">
+          <button id="increase-quantity" class="w-8 h-8 flex items-center justify-center border rounded-lg">+</button>
+          <span id="stock-status" class="text-red-500 text-sm">(Hết hàng)</span>
+        </div>
+      </div>
+      <div class="bg-gray-50 p-4 rounded-lg mb-4">
+        <div class="flex justify-between items-center mb-2">
+          <span>Đơn giá:</span>
+          <span id="unit-price" class="font-medium"></span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="font-semibold">Tổng tiền:</span>
+          <span id="total-amount" class="font-bold text-purple-600"></span>
+        </div>
+      </div>
+      <button id="add-to-cart-btn" class="w-full px-6 py-3 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition">
+        Thêm vào giỏ
+      </button>
+    </div>
+  </div>
+</main>
+<!-- Modal Xác nhận -->
+<div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
+    <h3 class="text-lg font-semibold mb-4">Xác nhận</h3>
+    <p>Bạn có chắc muốn thêm sản phẩm này vào giỏ hàng?</p>
+    <div class="flex justify-end gap-4 mt-6">
+      <button id="confirm-cancel" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Hủy</button>
+      <button id="confirm-ok" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Đồng ý</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Thành công -->
+<div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
+    <h3 class="text-lg font-semibold mb-4">Thành công</h3>
+    <p>Sản phẩm đã được thêm vào giỏ hàng!</p>
+    <div class="flex justify-end mt-6">
+      <button id="success-ok" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">OK</button>
+    </div>
+  </div>
+</div>
+<script src="../assets/product-detail.js"></script>
+<script>
+const addToCartBtn = document.getElementById('add-to-cart-btn');
+const confirmModal = document.getElementById('confirm-modal');
+const confirmOkBtn = document.getElementById('confirm-ok');
+const confirmCancelBtn = document.getElementById('confirm-cancel');
+const successModal = document.getElementById('success-modal');
+const successOkBtn = document.getElementById('success-ok');
+
+// Bấm Thêm vào giỏ -> chỉ mở confirm modal
+addToCartBtn.addEventListener('click', () => {
+  confirmModal.classList.remove('hidden');
+  confirmModal.classList.add('flex');
+});
+
+// Bấm Đồng ý trong confirm -> gọi API
+confirmOkBtn.addEventListener('click', () => {
+  confirmModal.classList.add('hidden');
+
+  const userId = localStorage.getItem('user_id');
+  if (!userId) {
+    alert("Bạn cần đăng nhập để thêm vào giỏ!");
+    return;
+  }
+
+  const productId = document.getElementById('product-id').dataset.id;
+  const quantity = parseInt(document.getElementById('quantity-input').value, 10);
+  const price = parseInt(document.getElementById('unit-price').textContent.replace(/\D/g, ''), 10);
+  const color = document.querySelector('#product-colors .selected')?.textContent || '';
+  const size = document.querySelector('#product-sizes .selected')?.textContent || '';
+
+  fetch('http://localhost:3001/api/order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: userId,
+      items: [
+        { product_id: productId, color, size, quantity, price, status: "Đã đặt" }
+      ]
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      successModal.classList.remove('hidden');
+      successModal.classList.add('flex');
+    } else {
+      alert("Lỗi khi thêm giỏ hàng: " + (data.error || "Không rõ nguyên nhân"));
+    }
+  })
+  .catch(err => console.error('Lỗi thêm giỏ hàng:', err));
+});
+
+// Bấm Hủy -> đóng confirm modal
+confirmCancelBtn.addEventListener('click', () => {
+  confirmModal.classList.add('hidden');
+});
+
+// Bấm OK trong success modal -> đóng modal + về giỏ hàng
+successOkBtn.addEventListener('click', () => {
+  successModal.classList.add('hidden');
+  window.location.href = "cart.html";
+});
+</script>
+
+</body>
+</html>

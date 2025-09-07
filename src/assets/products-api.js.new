@@ -1,0 +1,135 @@
+// products-api.js
+
+// Define base functions in global scope
+window.getProducts = async function() {
+    try {
+        console.log('Fetching products...');
+        const response = await fetch(window.API_URL + '/products');
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error?.sqlMessage || data.error?.message || 'Failed to fetch products');
+        }
+
+        console.log('Received products:', data);
+        return data;
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        throw new Error(`Failed to fetch products: ${error.message}`);
+    }
+}
+
+window.getProduct = async function(id) {
+    try {
+        console.log('Fetching product:', id);
+        const response = await fetch(`${window.API_URL}/products/${id}`);
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error?.sqlMessage || data.error?.message || 'Failed to fetch product');
+        }
+
+        // Parse colors and sizes from JSON strings
+        if (typeof data.colors === 'string') {
+            data.colors = JSON.parse(data.colors);
+        }
+        if (typeof data.sizes === 'string') {
+            data.sizes = JSON.parse(data.sizes);
+        }
+
+        console.log('Received product:', data);
+        return data;
+    } catch (error) {
+        console.error('Error fetching product:', error);
+        throw new Error(`Failed to fetch product: ${error.message}`);
+    }
+}
+
+window.createProduct = async function(product) {
+    try {
+        console.log('Creating product:', product);
+        
+        const response = await fetch(window.API_URL + '/products', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(product)
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error?.sqlMessage || data.error?.message || 'Failed to create product');
+        }
+
+        console.log('Created product:', data);
+        return data;
+    } catch (error) {
+        console.error('Error creating product:', error);
+        throw new Error(`Failed to create product: ${error.message}`);
+    }
+}
+
+window.updateProduct = async function(product) {
+    try {
+        console.log('Updating product:', product);
+        
+        const response = await fetch(`${window.API_URL}/products/${product.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(product)
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error?.sqlMessage || data.error?.message || 'Failed to update product');
+        }
+
+        console.log('Updated product:', data);
+        return data;
+    } catch (error) {
+        console.error('Error updating product:', error);
+        throw new Error(`Failed to update product: ${error.message}`);
+    }
+}
+
+window.deleteProduct = async function(id) {
+    try {
+        console.log('Deleting product:', id);
+        
+        const response = await fetch(`${window.API_URL}/products/${id}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error?.sqlMessage || data.error?.message || 'Failed to delete product');
+        }
+
+        console.log('Deleted product:', data);
+        return data;
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        throw new Error(`Failed to delete product: ${error.message}`);
+    }
+}
+
+// Lấy sản phẩm theo brand
+window.getProductsByBrand = async function(brand) {
+    try {
+        const products = await window.getProducts();
+        return brand.toLowerCase() === 'all' 
+            ? products 
+            : products.filter(product => product.brand.toLowerCase() === brand.toLowerCase());
+    } catch (error) {
+        console.error('Error filtering products by brand:', error);
+        throw new Error(`Failed to filter products by brand: ${error.message}`);
+    }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "shop-giay-bong-da",
+  "version": "1.0.0",
+  "description": "Web bán giày bóng đá đơn giản",
+  "main": "index.html",
+  "scripts": {
+    "dev": "live-server --open=src/pages/login.html"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
