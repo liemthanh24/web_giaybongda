@@ -33,7 +33,15 @@ document.addEventListener('DOMContentLoaded', async function () {
         elements.name.textContent = state.product.name;
         elements.code.textContent = state.product.code;
         elements.price.textContent = formatCurrency(state.product.price);
-        elements.image.src = state.product.image ? `/assets/${state.product.image}` : '';
+        if (state.product.image) {
+        if (state.product.image.startsWith("http")) {
+            elements.image.src = state.product.image; // URL đầy đủ
+        } else {
+            elements.image.src = `http://localhost:3001/assets/${state.product.image}`; // ảnh trong assets
+        }
+        } else {
+        elements.image.src = "/assets/no-image.png";
+        }
         elements.unitPrice.textContent = formatCurrency(state.product.price);
 
 		const descriptionEl = document.getElementById('product-description');
@@ -139,8 +147,7 @@ function prepareColorsAndSizes() {
     }
     function updateUI() {
         if (!state.product) return;
-        const stockKey = `${state.selectedColor}-${state.selectedSize}`;
-        const availableStock = state.stock[stockKey] || 0;
+        const availableStock = state.stock || 0;
 
         if (availableStock > 0) {
             elements.stockStatus.textContent = `(Còn ${availableStock} sản phẩm)`;
@@ -209,8 +216,8 @@ function prepareColorsAndSizes() {
         const response = await fetch(`http://localhost:3001/api/products/${state.product.id}/stock`);
         if (!response.ok) throw new Error('Không thể tải thông tin tồn kho từ server.');
         const data = await response.json();
-        state.stock = data.stock || {};
-        console.log('[Buy.js] Fetched Stock:', state.stock); // DEBUG
+        state.stock = data.stock || 0;   // ✅ giờ là số
+        console.log('[product-detail] Stock:', state.stock);
 
         // Bắt đầu hiển thị mọi thứ lên giao diện
         renderProductInfo();

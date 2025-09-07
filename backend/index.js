@@ -299,6 +299,9 @@ app.get('/api/products', (req, res) => {
 
     return {
         ...product,
+        stock: typeof product.stock === "object" 
+        ? (product.stock.total || 0) 
+        : product.stock,
         colors: Array.isArray(colors) ? colors : [],
         sizes: Array.isArray(sizes) ? sizes : []
     };
@@ -382,7 +385,9 @@ app.get('/api/products/:id/stock', (req, res) => {
     });
 
     console.log(`[STOCK API] Đã tạo dữ liệu tồn kho thành công:`, stockData);
-    return res.json({ stock: stockData });
+    return res.json({
+        stock: Number(product.stock) || 0
+    });
   });
 });
 
@@ -547,6 +552,7 @@ app.post('/api/login', (req, res) => {
 });
 
 // API: Đặt hàng
+// API: Đặt hàng
 app.post('/api/order', (req, res) => {
   const { user_id, items } = req.body;
 
@@ -554,42 +560,48 @@ app.post('/api/order', (req, res) => {
     return res.status(400).json({ error: 'Dữ liệu không hợp lệ' });
   }
 
-  // Duyệt từng item trong order
+  // Dùng transaction để đảm bảo atomic (nếu muốn, optional)
   items.forEach(item => {
     const { product_id, color, size, quantity, price, status } = item;
 
-    // 1️⃣ Trừ tồn kho trong bảng stock
-    const updateStock = `
-      UPDATE stock 
-      SET stock = stock - ? 
-      WHERE product_id = ? AND color = ? AND size = ?
+    // 1️⃣ Trừ stock sản phẩm
+    const updateStockQuery = `
+      UPDATE products
+      SET stock = GREATEST(stock - ?, 0)
+      WHERE id = ? AND stock >= ?
     `;
-    db.query(updateStock, [quantity, product_id, color, size], (err) => {
-      if (err) console.error("Lỗi update stock:", err);
+    db.query(updateStockQuery, [quantity, product_id, quantity], (err, result) => {
+      if (err) {
+        console.error("Lỗi update stock:", err);
+        return;
+      }
+      if (result.affectedRows === 0) {
+        console.warn(`Sản phẩm ID ${product_id} không đủ stock!`);
+      }
     });
 
     // 2️⃣ Tăng doanh thu cho sản phẩm
     const updateRevenueProduct = `
       UPDATE products 
-      SET revenue = revenue + (? * ?)
+      SET revenue = COALESCE(revenue,0) + (? * ?)
       WHERE id = ?
     `;
     db.query(updateRevenueProduct, [quantity, price, product_id], (err) => {
-      if (err) console.error("Lỗi update revenue product:", err);
+      if (err) console.error("Lỗi update revenue sản phẩm:", err);
     });
 
     // 3️⃣ Tăng doanh thu cho thương hiệu
     const updateRevenueBrand = `
       UPDATE brands b
       JOIN products p ON b.id = p.brand_id
-      SET b.revenue = b.revenue + (? * ?)
+      SET b.revenue = COALESCE(b.revenue,0) + (? * ?)
       WHERE p.id = ?
     `;
     db.query(updateRevenueBrand, [quantity, price, product_id], (err) => {
       if (err) console.error("Lỗi update revenue brand:", err);
     });
 
-    // 4️⃣ Lưu order vào bảng orders (ví dụ bảng order_items)
+    // 4️⃣ Lưu order vào bảng orders
     const insertOrder = `
       INSERT INTO orders (user_id, product_id, color, size, quantity, price, status)
       VALUES (?, ?, ?, ?, ?, ?, ?)

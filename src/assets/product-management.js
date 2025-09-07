@@ -307,8 +307,11 @@ async function refreshStock(productId) {
         const res = await fetch(`${API_URL}/products/${productId}/stock`);
         if (!res.ok) throw new Error("Không thể tải tồn kho");
         const data = await res.json();
-        console.log("[refreshStock] Stock mới cho", productId, data);
-        return data.stock;
+        if (data && data.stock && typeof data.stock === 'object') {
+            const total = Object.values(data.stock).reduce((sum, val) => sum + val, 0);
+            return total;
+        }
+        return 0;
     } catch (err) {
         console.error("[refreshStock] Lỗi:", err);
         return null;
@@ -363,19 +366,6 @@ function renderProductsTable(products) {
             </td>
         `;
         elements.tableBody.appendChild(row);
-
-        // 🔄 Gọi API lấy stock mới nhất rồi update vào cell
-        const newStock = await refreshStock(product.id);
-        if (newStock !== null) {
-            const stockCell = document.getElementById(`stock-${product.id}`);
-            if (stockCell) {
-                stockCell.innerHTML = `
-                    <span class="text-sm font-medium ${newStock > 0 ? 'text-green-600' : 'text-red-600'}">
-                        ${newStock}
-                    </span>
-                `;
-            }
-        }
     });
 }
 

@@ -129,38 +129,69 @@
         <button id="success-ok" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">OK</button>
     </div>
     </div>
-    <script>
-document.getElementById('order-btn').addEventListener('click', function () {
-    const userId = localStorage.getItem('user_id');
-    if (!userId) {
-        alert("Bạn cần đăng nhập để mua hàng!");
-        return;
-    }
+ <script>
+const orderBtn = document.getElementById('order-btn');
+const confirmModal = document.getElementById('confirm-modal');
+const confirmOkBtn = document.getElementById('confirm-ok');
+const confirmCancelBtn = document.getElementById('confirm-cancel');
+const successModal = document.getElementById('success-modal');
+const successOkBtn = document.getElementById('success-ok');
 
-    const productId = document.getElementById('product-id').dataset.id;
-    const quantity = parseInt(document.getElementById('quantity-input').value, 10);
-    const price = parseInt(document.getElementById('unit-price').textContent.replace(/\D/g, ''), 10);
-    const color = document.querySelector('#product-colors .selected')?.textContent || '';
-    const size = document.querySelector('#product-sizes .selected')?.textContent || '';
-
-    fetch('http://localhost:3001/api/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            user_id: userId,
-            items: [
-                { product_id: productId, color, size, quantity, price, status: "Đang giao" }
-            ]
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-           document.getElementById('success-modal').classList.remove('hidden');
-        }
-    })
-    .catch(err => console.error('Lỗi đặt hàng:', err));
+// Bấm nút Đặt hàng -> chỉ mở modal confirm
+orderBtn.addEventListener('click', () => {
+  confirmModal.classList.remove('hidden');
+  confirmModal.classList.add('flex');
 });
-      </script>
+
+// Bấm Đồng ý -> gọi API đặt hàng
+confirmOkBtn.addEventListener('click', () => {
+  confirmModal.classList.add('hidden');
+
+  const userId = localStorage.getItem('user_id');
+  if (!userId) {
+    alert("Bạn cần đăng nhập để mua hàng!");
+    return;
+  }
+
+  const productId = document.getElementById('product-id').dataset.id;
+  const quantity = parseInt(document.getElementById('quantity-input').value, 10);
+  const price = parseInt(document.getElementById('unit-price').textContent.replace(/\D/g, ''), 10);
+  const color = document.querySelector('#product-colors .selected')?.textContent || '';
+  const size = document.querySelector('#product-sizes .selected')?.textContent || '';
+
+  fetch('http://localhost:3001/api/order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: userId,
+      items: [
+        { product_id: productId, color, size, quantity, price, status: "Đang giao" }
+      ]
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      successModal.classList.remove('hidden');
+      successModal.classList.add('flex');
+    } else {
+      alert("Lỗi khi đặt hàng: " + (data.error || "Không rõ nguyên nhân"));
+    }
+  })
+  .catch(err => console.error('Lỗi đặt hàng:', err));
+});
+
+// Bấm Hủy -> đóng confirm modal
+confirmCancelBtn.addEventListener('click', () => {
+  confirmModal.classList.add('hidden');
+});
+
+// Bấm OK trong success modal -> chuyển sang giỏ hàng
+successOkBtn.addEventListener('click', () => {
+  successModal.classList.add('hidden');
+  window.location.href = "cart.html";
+});
+</script>
+
 </body>
 </html>
