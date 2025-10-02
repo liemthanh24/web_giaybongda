@@ -11,37 +11,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadUsers();
 });
 
-// Load danh sách người dùng
+// Trong file: ../assets/user-management.js
+
 async function loadUsers() {
     try {
         const response = await fetch('http://localhost:3001/api/users');
         const users = await response.json();
-        
+
         const usersList = document.getElementById('users-list');
+
         usersList.innerHTML = users.map(user => `
             <tr>
-                <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${user.username}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                        ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">
-                        ${user.role === 'admin' ? 'Admin' : 'Người dùng'}
-                    </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">${new Date(user.created_at).toLocaleDateString('vi-VN')}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.username}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.email}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(user.created_at).toLocaleDateString('vi-VN')}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div class="flex space-x-2">
-                        <button onclick="editUser(${user.id})" 
-                                class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-                            Sửa
-                        </button>
-                        ${user.role !== 'admin' ? `
-                            <button onclick="confirmDeleteUser(${user.id}, '${user.username}')" 
-                                    class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">
-                                Xóa
-                            </button>
-                        ` : ''}
+                        <button onclick="editUser(${user.id})" class="px-3 py-1 bg-purple-600 text-white text-xs font-semibold rounded-md hover:bg-purple-700 transition-colors">Sửa</button>
+
+                        <button onclick="confirmDeleteUser(${user.id}, '${user.username}')" class="px-3 py-1 bg-red-600 text-white text-xs font-semibold rounded-md hover:bg-red-700 transition-colors">Xóa</button>
                     </div>
                 </td>
             </tr>

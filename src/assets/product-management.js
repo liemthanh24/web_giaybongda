@@ -51,24 +51,14 @@ const elements = {
     cancelBtn: null
 };
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, waiting for API...');
-    waitForAPI();
+    console.log('DOM loaded, initializing application...');
+    initializeApp().catch(error => {
+        console.error('Failed to initialize:', error);
+        showNotification('error', 'Lỗi khởi tạo: ' + error.message);
+    });
 });
 
-function waitForAPI() {
-    if (typeof window.getProducts === 'function') {
-        console.log('API functions detected, initializing...');
-        initializeApp().catch(error => {
-            console.error('Failed to initialize:', error);
-            showNotification('error', 'Initialization error: ' + error.message);
-        });
-    } else {
-        console.log('API not ready, retrying...');
-        setTimeout(waitForAPI, 100);
-    }
-}
 
 // Main initialization
 async function initializeApp() {
@@ -318,54 +308,45 @@ async function refreshStock(productId) {
     }
 }
 
-// Render products table
+// Trong file: ../assets/product-management.js
+
 function renderProductsTable(products) {
-    if (!elements.tableBody) return;
-    
-    elements.tableBody.innerHTML = '';
-    
-    products.forEach(async (product) => {   // 👈 dùng async để có thể await
+    const tableBody = document.getElementById('products-list');
+    if (!tableBody) return;
+
+    if (products.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500">Không có sản phẩm nào.</td></tr>`;
+        return;
+    }
+
+    tableBody.innerHTML = ''; // Xóa nội dung cũ
+    products.forEach(product => {
         const row = document.createElement('tr');
-        row.className = 'hover:bg-gray-50 border-b border-gray-200';
+        row.className = 'hover:bg-gray-50';
         row.innerHTML = `
-            <td class="w-28 px-4 py-3 whitespace-nowrap">
-                <span class="text-sm font-medium text-gray-700">${product.code || ''}</span>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <img src="${product.image || ''}" alt="${product.name}" class="w-12 h-12 object-contain rounded-md border p-1 bg-white">
             </td>
-            <td class="w-28 px-4 py-3 text-center">
-                <div class="flex justify-center">
-                    <img src="${product.image || ''}" alt="${product.name || ''}" class="w-14 h-14 object-contain rounded-lg border border-gray-200 bg-white p-1">
-                </div>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="font-medium text-gray-900">${product.name}</div>
+                <div class="text-sm text-gray-500">${product.code}</div>
             </td>
-            <td class="w-44 px-4 py-3 text-center">
-                <span class="text-sm font-medium text-gray-800 line-clamp-2">${product.name || ''}</span>
-            </td>
-            <td class="w-28 px-4 py-3 text-center">
-                <span class="text-sm text-gray-600">${product.brand || ''}</span>
-            </td>
-            <td class="w-32 px-4 py-3 text-right">
-                <span class="text-sm font-medium text-gray-800">${formatPrice(product.price)}đ</span>
-            </td>
-            <!-- 👇 gán id cho cột stock -->
-            <td class="w-24 px-4 py-3 text-center" id="stock-${product.id}">
-                <span class="text-sm font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}">
-                    ${product.stock || 0}
-                </span>
-            </td>
-            <td class="w-40 px-4 py-3 text-center">
-                <span class="text-sm text-gray-500 whitespace-nowrap">${formatDate(product.created_at)}</span>
-            </td>
-            <td class="w-28 px-4 py-3">
-                <div class="flex justify-center items-center space-x-2">
-                    <button onclick="editProduct('${product.id}')" class="p-1 rounded text-blue-600 hover:bg-blue-50">
-                        ✏️
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.brand}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">${(product.price || 0).toLocaleString('vi-VN')}đ</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm ${product.stock > 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}">${product.stock}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                <div class="flex justify-center items-center gap-4">
+                    <button onclick="editProduct(${product.id})" class="text-purple-600 hover:text-purple-900" title="Sửa sản phẩm">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
                     </button>
-                    <button onclick="deleteProduct('${product.id}')" class="p-1 rounded text-red-600 hover:bg-red-50">
-                        🗑️
+                    <button onclick="deleteProduct(${product.id})" class="text-red-600 hover:text-red-900" title="Xóa sản phẩm">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193v-.443A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" /></svg>
                     </button>
                 </div>
             </td>
+        </tr>
         `;
-        elements.tableBody.appendChild(row);
+        tableBody.appendChild(row);
     });
 }
 

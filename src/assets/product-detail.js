@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     increaseBtn: document.getElementById('increase-quantity'),
     quantityInput: document.getElementById('quantity-input'),
     stockStatus: document.getElementById('stock-status'),
-    unitPrice: document.getElementById('unit-price'),
     totalAmount: document.getElementById('total-amount'),
     addToCartBtn: document.getElementById('add-to-cart-btn'),
 };
@@ -42,7 +41,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         } else {
         elements.image.src = "/assets/no-image.png";
         }
-        elements.unitPrice.textContent = formatCurrency(state.product.price);
 
 		const descriptionEl = document.getElementById('product-description');
     	descriptionEl.textContent = state.product.description || "Chưa có mô tả cho sản phẩm này.";
@@ -297,6 +295,7 @@ confirmOkBtn.addEventListener("click", () => {
     if (data.success) {
       successModal.classList.remove("hidden");
       successModal.classList.add("flex");
+      updateCartBadge();
     } else {
       alert("Có lỗi khi thêm vào giỏ: " + (data.error || "Không rõ nguyên nhân"));
     }

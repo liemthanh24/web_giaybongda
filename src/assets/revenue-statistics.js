@@ -246,7 +246,8 @@ function filterBrands(keyword) {
     displayBrandRevenue(filtered);
 }
 
-// Hàm hiển thị dữ liệu sản phẩm đã lọc
+/// Trong file: ../assets/revenue-statistics.js
+
 function displayProductRevenue(data) {
     const tableBody = document.getElementById('product-revenue-body');
     if (!tableBody) return;
@@ -255,21 +256,25 @@ function displayProductRevenue(data) {
     data.forEach(product => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="px-6 py-4">${product.code || generateProductCode(product.brand)}</td>
-            <td class="px-6 py-4">${product.name || ''}</td>
-            <td class="px-6 py-4">${product.brand || ''}</td>
-            <td class="px-6 py-4">${product.total_orders}</td>
-            <td class="px-6 py-4">${product.total_quantity}</td>
-            <td class="px-6 py-4">${formatPrice(product.total_revenue)}đ</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.code || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${product.name || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.brand || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${product.total_orders}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${product.total_quantity}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-semibold text-right">${formatPrice(product.total_revenue)}đ</td>
         `;
         tableBody.appendChild(row);
     });
     
-    const totalRevenue = data.reduce((sum, product) => sum + product.total_revenue, 0);
-    document.getElementById('total-product-revenue').textContent = formatPrice(totalRevenue) + 'đ';
+    // Phần tính tổng không thay đổi
+    const totalRevenue = data.reduce((sum, product) => sum + (product.total_revenue || 0), 0);
+    const totalEl = document.getElementById('total-product-revenue');
+    if(totalEl) totalEl.textContent = formatPrice(totalRevenue) + 'đ';
 }
 
 // Hàm hiển thị dữ liệu nhãn hàng đã lọc
+// Trong file: ../assets/revenue-statistics.js
+
 function displayBrandRevenue(data) {
     const tableBody = document.getElementById('brand-revenue-body');
     if (!tableBody) return;
@@ -278,17 +283,19 @@ function displayBrandRevenue(data) {
     data.forEach(brand => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="px-6 py-4">${brand.brand || ''}</td>
-            <td class="px-6 py-4">${brand.total_products || 0}</td>
-            <td class="px-6 py-4">${brand.total_orders}</td>
-            <td class="px-6 py-4">${brand.total_quantity}</td>
-            <td class="px-6 py-4">${formatPrice(brand.total_revenue)}đ</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${brand.brand || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${brand.total_products || 0}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${brand.total_orders}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${brand.total_quantity}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-semibold text-right">${formatPrice(brand.total_revenue)}đ</td>
         `;
         tableBody.appendChild(row);
     });
-    
-    const totalRevenue = data.reduce((sum, brand) => sum + brand.total_revenue, 0);
-    document.getElementById('total-brand-revenue').textContent = formatPrice(totalRevenue) + 'đ';
+
+    // Phần tính tổng không thay đổi
+    const totalRevenue = data.reduce((sum, brand) => sum + (brand.total_revenue || 0), 0);
+    const totalEl = document.getElementById('total-brand-revenue');
+    if(totalEl) totalEl.textContent = formatPrice(totalRevenue) + 'đ';
 }
 
 document.addEventListener('DOMContentLoaded', () => {

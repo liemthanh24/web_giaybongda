@@ -1,10 +1,10 @@
 // products-api.js
-
+const API_URL = 'http://localhost:3001/api';
 // Define base functions in global scope
 window.getProducts = async function() {
     try {
         console.log('Fetching products...');
-        const response = await fetch(`${window.API_URL}/products`);
+        const response = await fetch(`${API_URL}/products`);
         
         const data = await response.json();
         

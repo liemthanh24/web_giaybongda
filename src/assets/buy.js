@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         increaseBtn: document.getElementById('increase-quantity'),
         quantityInput: document.getElementById('quantity-input'),
         stockStatus: document.getElementById('stock-status'),
-        unitPrice: document.getElementById('unit-price'),
         totalAmount: document.getElementById('total-amount'),
         orderBtn: document.getElementById('order-btn'),
     };
@@ -83,7 +82,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     } else {
         elements.image.src = '/assets/no-image.png';
     }
-    elements.unitPrice.textContent = formatCurrency(state.product.price);
     }
 
     function prepareColorsAndSizes() {
@@ -320,7 +318,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             size: state.selectedSize,
             quantity: state.quantity,
             price: state.product.price,
-            status: "Đang giao"   // ✅ đặc biệt cho buy
+            status: "Đã đặt"   // ✅ đặc biệt cho buy
             }
         ]
         })
@@ -330,6 +328,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (data.success) {
         successModal.classList.remove("hidden");
         successModal.classList.add("flex");
+        updateCartBadge();
         } else {
         alert("Lỗi khi đặt hàng: " + (data.error || "Không rõ nguyên nhân"));
         }

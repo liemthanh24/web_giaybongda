@@ -3,64 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giỏ hàng</title>
+    <title>Giỏ hàng - Giày Bóng Đá</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/src/assets/products-api.js"></script>
-    <script src="/src/assets/cart-api.js"></script>
-    <script src="/src/assets/cart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; }
+
+        /* --- CSS ĐỒNG BỘ TỪ TRANG CHỦ --- */
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            background-color: #ef4444; /* red-500 */
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        footer {
+            background-color: #1f2937; /* gray-800 */
+            color: #d1d5db; /* gray-300 */
+        }
+        footer a:hover {
+            color: white;
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <!-- Header giống index.html -->
-    <header class="bg-white shadow flex items-center justify-between px-8 py-4">
-        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
-            <img src="../../assets/soccer-shoes-logo.svg" alt="logo" class="h-8 w-8">
-            <span class="text-2xl font-bold text-purple-600">Giày Bóng Đá</span>
-        </div>
-        <div class="flex-1 mx-8 relative">
-            <input type="text" placeholder="Tìm kiếm giày..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
-        </div>
-        <div class="flex items-center gap-4">
-            <span class="text-gray-700 text-xl font-semibold flex items-center">Chào, <span class="ml-1">user</span>
-                <button class="ml-2 p-2 rounded-full hover:bg-gray-100" onclick="window.location.href='cart.html'">
-                    <img src="https://thafd.bing.com/th/id/OIP.u-1dWGTM7biu51ZxKpOIiAHaFL?w=277&h=194&c=7&r=0&o=7&cb=thfvnext&dpr=1.3&pid=1.7&rm=3" alt="shopping cart" class="h-14 w-14 object-contain" style="background: transparent;">
-                </button>
-                <button id="logout-btn" class="ml-2 p-2 rounded-full hover:bg-gray-100 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                </button>
-                <script>
-                document.getElementById('logout-btn').onclick = function() {
-                    localStorage.removeItem('username');
-                    window.location.href = 'login.html';
-                };
-                </script>
-            </span>
+<body class="bg-gray-50 min-h-screen">
+    <header class="bg-white shadow-md sticky top-0 z-50 border-b">
+        <div class="container mx-auto px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+                <img src="../../assets/soccer-shoes-logo.svg" alt="logo" class="h-10 w-10">
+                <span class="text-2xl font-bold text-purple-600">Giày Bóng Đá</span>
+            </div>
+            <div class="flex-1 mx-8 max-w-xl">
+                 <div id="search-container" class="relative">
+                    <input type="text" id="search-input" placeholder="Tìm kiếm đôi giày mơ ước của bạn..." class="w-full pl-12 pr-5 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-400 transition">
+                     <svg class="w-5 h-5 text-gray-400 absolute left-5 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <span class="text-gray-700 font-semibold flex items-center">Chào, <span id="username-display" class="ml-1">user</span></span>
+                <div class="flex items-center gap-4">
+                    <button id="cart-btn" class="relative p-2 rounded-full hover:bg-gray-100" onclick="window.location.href='cart.html'">
+                        <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 17M7 13h10l-1.55 4M17 13h-1.55M5.4 17h11.15M15 21a1 1 0 11-2 0 1 1 0 012 0zm-8 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
+                        <span id="cart-count-badge" class="cart-badge" style="display: none;">0</span>
+                    </button>
+                    <button id="logout-btn" class="p-2 rounded-full hover:bg-gray-100">
+                        <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    </button>
+                </div>
+            </div>
         </div>
     </header>
-    <main class="px-8 py-6">
-        <h1 class="text-3xl font-bold mb-6">GIỎ HÀNG</h1>
-        <div class="bg-white rounded-xl shadow p-6">
-                <table class="w-full text-left border-t border-gray-200 mt-8">
-                <thead>
-                        <tr class="bg-gray-100">
-                        <th class="py-2">Thông tin chi tiết sản phẩm</th>
-                        <th class="py-2">Đơn giá</th>
-                        <th class="py-2">Số lượng</th>
-                        <th class="py-2">Tổng giá</th>
-                            <th class="py-2">Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody id="cart-list">
-                    <!-- Sản phẩm sẽ được render ở đây -->
-                </tbody>
-            </table>
-                <script src="../assets/cart.js"></script>
+    
+    <main class="container mx-auto px-8 py-12">
+        <h1 class="text-4xl font-extrabold mb-8 text-gray-800">Giỏ Hàng Của Bạn</h1>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="border-b-2 border-gray-200">
+                        <tr class="text-sm text-gray-600 uppercase">
+                            <th class="py-4 px-4 font-semibold">Sản phẩm</th>
+                            <th class="py-4 px-4 font-semibold text-center">Đơn giá</th>
+                            <th class="py-4 px-4 font-semibold text-center">Số lượng</th>
+                            <th class="py-4 px-4 font-semibold text-center">Tổng giá</th>
+                            <th class="py-4 px-4 font-semibold text-center">Trạng thái</th>
+                            <th class="py-4 px-4 font-semibold text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-list">
+                        </tbody>
+                </table>
+            </div>
         </div>
     </main>
+        <div id="delete-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm text-center">
+            <h3 class="text-xl font-bold mb-4 text-gray-800">Xác Nhận Xóa</h3>
+            <p class="text-gray-600 mb-6">Bạn có chắc chắn muốn xóa vĩnh viễn đơn hàng này không? Hành động này không thể hoàn tác.</p>
+            <div class="flex justify-center gap-4">
+                <button id="delete-confirm-cancel" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-semibold">
+                    Hủy
+                </button>
+                <button id="delete-confirm-ok" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold">
+                    Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+    <footer class="mt-12 py-12 border-t bg-gray-800 text-gray-300">
+        <div class="container mx-auto px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div><h3 class="text-lg font-bold text-white mb-4">Giày Bóng Đá</h3><p>Cửa hàng cung cấp giày bóng đá chính hãng, uy tín hàng đầu Việt Nam.</p></div>
+            <div><h3 class="text-lg font-semibold text-white mb-4">Về Chúng Tôi</h3><ul class="space-y-2"><li><a href="#" class="transition">Giới thiệu</a></li><li><a href="#" class="transition">Hệ thống cửa hàng</a></li></ul></div>
+            <div><h3 class="text-lg font-semibold text-white mb-4">Hỗ Trợ Khách Hàng</h3><ul class="space-y-2"><li><a href="#" class="transition">Hướng dẫn chọn size</a></li><li><a href="#" class="transition">Chính sách đổi trả</a></li><li><a href="#" class="transition">Chính sách bảo hành</a></li></ul></div>
+            <div><h3 class="text-lg font-semibold text-white mb-4">Kết Nối Với Chúng Tôi</h3></div>
+        </div>
+        <div class="container mx-auto px-8 mt-8 text-center border-t border-gray-700 pt-6"><p class="text-sm">&copy; 2025 Giày Bóng Đá. All rights reserved.</p></div>
+    </footer>
+
+    <script src="/src/assets/products-api.js"></script>
+    <script src="/src/assets/cart-api.js"></script>
+    <script src="/src/assets/cart.js"></script>
+    <script>
+        // JS để logout và cập nhật giỏ hàng
+        document.getElementById('logout-btn').onclick = function() {
+            localStorage.removeItem('username');
+            localStorage.removeItem('user_id');
+            window.location.href = 'login.html';
+        };
+
+        async function updateCartBadge() {
+            const userId = localStorage.getItem('user_id');
+            const badge = document.getElementById('cart-count-badge');
+            if (!userId || !badge) { if (badge) badge.style.display = 'none'; return; }
+            try {
+                const response = await fetch(`http://localhost:3001/api/orders/${userId}`);
+                if (!response.ok) { badge.style.display = 'none'; return; }
+                const cartItems = await response.json();
+                const itemCount = cartItems.length;
+                if (itemCount > 0) {
+                    badge.textContent = itemCount;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Lỗi khi cập nhật số lượng giỏ hàng:', error);
+                badge.style.display = 'none';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', updateCartBadge);
+    </script>
 </body>
 </html>
