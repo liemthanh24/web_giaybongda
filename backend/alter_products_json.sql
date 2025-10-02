@@ -1,4 +1,0 @@
--- Modify columns to use JSON type
-ALTER TABLE products 
-MODIFY colors JSON NOT NULL DEFAULT (JSON_ARRAY()),
-MODIFY sizes JSON NOT NULL DEFAULT (JSON_ARRAY());
