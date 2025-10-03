@@ -72,60 +72,33 @@ function generateProductId(brand) {
     return `${prefix}${randomNum}`;
 }
 
-// Cập nhật sản phẩm
+// Thay thế trong file: ../assets/products-api.js
+
 async function updateProduct(id, product) {
     try {
-        // Log the request
         console.log('Đang cập nhật sản phẩm:', { id, product });
-        
-        // Ensure product has the correct fields and convert colors/sizes to JSON if needed
-        const updatedProduct = {
-            ...product,
-            stock: product.stock || 0,
-            colors: Array.isArray(product.colors) ? product.colors : [],
-            sizes: Array.isArray(product.sizes) ? product.sizes : []
-        };
-        
-        // Log the actual data being sent
-        console.log('Sending to API:', {
-            url: `${window.API_URL}/products/${id}`,
-            data: updatedProduct
-        });
-        
-        const response = await fetch(`${window.API_URL}/products/${id}`, {
+
+        const response = await fetch(`${API_URL}/products/${id}`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updatedProduct)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(product)
         });
-        
-        console.log('Trạng thái response:', {
-            status: response.status,
-            ok: response.ok,
-            statusText: response.statusText
-        });
-        
-        if (!response.ok) {
-            let errorMessage;
-            try {
-                const errorData = await response.json();
-                console.error('Lỗi từ API:', errorData);
-                errorMessage = errorData.error?.sqlMessage || errorData.error || JSON.stringify(errorData);
-            } catch (e) {
-                const errorText = await response.text();
-                console.error('Lỗi từ API (text):', errorText);
-                errorMessage = errorText;
-            }
-            throw new Error(`Lỗi khi cập nhật sản phẩm: ${errorMessage}`);
-        }
-        
+
+        // Đọc nội dung phản hồi MỘT LẦN DUY NHẤT
         const data = await response.json();
+
+        // Kiểm tra trạng thái sau khi đã đọc
+        if (!response.ok) {
+            // Nếu có lỗi, ném lỗi với message từ server
+            throw new Error(data.error || 'Cập nhật sản phẩm thất bại');
+        }
+
         console.log('Dữ liệu sau khi cập nhật:', data);
-        return data;
+        return data; // Trả về dữ liệu thành công
+
     } catch (error) {
         console.error('Lỗi khi cập nhật sản phẩm:', error);
-        throw error;
+        throw error; // Ném lỗi ra ngoài để hàm gọi nó có thể xử lý
     }
 }
 

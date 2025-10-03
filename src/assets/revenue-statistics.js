@@ -116,7 +116,7 @@ async function loadProductRevenue() {
         productRevenueData = productsWithRevenue;
         
         // Hiển thị tất cả sản phẩm
-        displayProductRevenue(productRevenueData);
+        filterProductRevenue(productRevenueData);
     } catch (error) {
         console.error('Lỗi khi tải doanh thu sản phẩm:', error);
     } finally {
@@ -297,7 +297,44 @@ function displayBrandRevenue(data) {
     const totalEl = document.getElementById('total-brand-revenue');
     if(totalEl) totalEl.textContent = formatPrice(totalRevenue) + 'đ';
 }
+// Thêm hàm mới này vào file
 
+// Thay thế trong file: ../assets/revenue-statistics.js
+
+function filterProductRevenue() {
+    console.log("--- Bắt đầu lọc doanh thu sản phẩm ---");
+    const filterElement = document.getElementById('revenue-brand-filter');
+
+    // Kiểm tra xem biến dữ liệu gốc có tồn tại và có phải là mảng không
+    if (!Array.isArray(productRevenueData)) {
+        console.error("Lỗi: productRevenueData không phải là một mảng!");
+        return;
+    }
+
+    console.log("Tổng số sản phẩm gốc đang có:", productRevenueData.length);
+
+    if (!filterElement) {
+        console.log("Không tìm thấy bộ lọc, hiển thị tất cả.");
+        displayProductRevenue(productRevenueData);
+        return;
+    }
+
+    const selectedBrand = filterElement.value;
+    console.log("Thương hiệu được chọn:", selectedBrand);
+
+    let filteredData;
+
+    if (selectedBrand === 'all') {
+        filteredData = productRevenueData;
+    } else {
+        filteredData = productRevenueData.filter(product => product.brand === selectedBrand);
+    }
+
+    console.log("Số sản phẩm sau khi lọc:", filteredData.length);
+    console.log("--- Kết thúc lọc ---");
+
+    displayProductRevenue(filteredData);
+}
 document.addEventListener('DOMContentLoaded', () => {
     // Load dữ liệu ban đầu
     refreshData();
@@ -328,5 +365,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 filterBrands(e.target.value.trim());
             }, 300);
         });
+    }
+    const revenueBrandFilter = document.getElementById('revenue-brand-filter');
+    if (revenueBrandFilter) {
+        revenueBrandFilter.addEventListener('change', filterProductRevenue);
     }
 });

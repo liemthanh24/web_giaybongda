@@ -1,3 +1,4 @@
+let allProducts = [];
 // Utility Functions
 function formatDate(dateString) {
     if (!dateString) return '';
@@ -102,6 +103,8 @@ function initializeElements() {
     // Validate required elements
     if (!elements.tableBody) throw new Error('Required element "products-list" not found');
     if (!elements.form) throw new Error('Required element "product-form" not found');
+    // Thêm vào cuối hàm initializeElements()
+    elements.brandFilter = document.getElementById('brand-filter');
 }
 
 // Setup event listeners
@@ -124,48 +127,63 @@ function setupEventListeners() {
     elements.cancelBtn?.addEventListener('click', () => {
         if (elements.modal) elements.modal.classList.add('hidden');
     });
+    // Thêm vào cuối hàm setupEventListeners()
+    elements.brandFilter?.addEventListener('change', filterProducts);
 }
 
-// Load and display products
+
+// Thay thế toàn bộ hàm loadProducts() trong file: ../assets/product-management.js
+
 async function loadProducts() {
     if (!elements.tableBody) return;
 
     try {
         console.log('Loading products...');
-        elements.tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Đang tải...</td></tr>';
+        elements.tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-10">Đang tải...</td></tr>';
         
         const products = await window.getProducts();
         console.log('Products loaded:', products);
 
         if (!Array.isArray(products)) {
-            throw new Error('Invalid products data received');
+            throw new Error('Dữ liệu sản phẩm không hợp lệ');
         }
         
-        if (products.length === 0) {
-            elements.tableBody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center py-4 text-gray-600">
-                        Chưa có sản phẩm nào. Hãy thêm sản phẩm mới!
-                    </td>
-                </tr>
-            `;
-        } else {
-            renderProductsTable(products);
-        }
+        // ---- SỬA LẠI LOGIC TẠI ĐÂY ----
+        // 1. Luôn luôn lưu lại danh sách sản phẩm gốc
+        allProducts = products;
+        
+        // 2. Luôn luôn gọi hàm lọc để quyết định hiển thị cái gì
+        filterProducts();
+
     } catch (error) {
         console.error('Error loading products:', error);
         showNotification('error', 'Không thể tải danh sách sản phẩm: ' + error.message);
         
         elements.tableBody.innerHTML = `
             <tr>
-                <td colspan="8" class="text-center py-4 text-red-600">
+                <td colspan="6" class="text-center py-10 text-red-600">
                     Không thể tải danh sách sản phẩm. Vui lòng kiểm tra kết nối và thử lại.
                 </td>
             </tr>
         `;
     }
 }
+// Thêm hàm mới này vào file
 
+function filterProducts() {
+    if (!elements.brandFilter) return;
+    
+    const selectedBrand = elements.brandFilter.value;
+    let productsToRender;
+
+    if (selectedBrand === 'all') {
+        productsToRender = allProducts;
+    } else {
+        productsToRender = allProducts.filter(p => p.brand === selectedBrand);
+    }
+
+    renderProductsTable(productsToRender);
+}
 // Validate stock based on colors and sizes
 function validateStock(stock, colors, sizes) {
     const minRequired = colors.length * sizes.length;
@@ -408,37 +426,29 @@ async function editProduct(id) {
     }
 }
 
-// Delete product
-async function deleteProduct(id) {
-    console.log('Deleting product with ID:', id); // Debug log
+// Thay thế trong file: ../assets/product-management.js
 
+async function deleteProduct(id) {
     const confirmed = confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');
-    if (!confirmed) {
-        console.log('User cancelled deletion'); // Debug log
-        return;
-    }
+    if (!confirmed) return;
 
     try {
-        console.log('Sending delete request...'); // Debug log
-        
-        // Gọi API trực tiếp tới backend
         const response = await fetch(`${API_URL}/products/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            method: 'DELETE'
         });
 
+        // Đọc nội dung phản hồi MỘT LẦN DUY NHẤT
+        const result = await response.json();
+
+        // Kiểm tra trạng thái sau khi đã đọc
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Xóa sản phẩm thất bại!');
+            throw new Error(result.error || 'Xóa sản phẩm thất bại!');
         }
 
-        const result = await response.json();
         console.log('Delete result:', result);
-
         showNotification('success', 'Xóa sản phẩm thành công!');
-        await loadProducts(); // Refresh lại danh sách
+        await loadProducts(); // Tải lại danh sách
+
     } catch (error) {
         console.error('Error deleting product:', error);
         showNotification('error', 'Không thể xóa sản phẩm: ' + error.message);

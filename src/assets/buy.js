@@ -117,11 +117,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             
             // Xử lý màu sắc tiếng Việt
             const colorMap = {
+                "Trắng": "#FFFFFF",
                 "Đen": "#000000",
-                "Trắng": "#ffffff",
-                "Đỏ": "#ff0000",
-                "Xanh dương": "#4141dcff",
-                "Xanh lá": "#00ff00"
+                "Đỏ": "#FF0000",
+                "Xanh dương": "#0000FF",
+                "Xanh lá": "#008000",
+                "Vàng": "#FFFF00",
+                "Cam": "#FFA500"
             };
             btn.style.backgroundColor = colorMap[colorName] || colorName;
             btn.dataset.color = colorName;
